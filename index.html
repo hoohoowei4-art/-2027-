@@ -23,7 +23,7 @@
                 </div>
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight text-white">2027 聰明人天與假別預排統計系統</h1>
-                    <p class="text-sm text-gray-400 mt-0.5">整合假別額度管理、雙軌審核（草稿/核准）與專案人天防呆預排</p>
+                    <p class="text-sm text-gray-400 mt-0.5">整合假別額度管理、雙軌審核（草稿/核准）、天災停班課調整與專案人天防呆預排</p>
                 </div>
             </div>
             <div class="flex flex-wrap items-center gap-3">
@@ -45,7 +45,7 @@
             <div class="bg-gray-900/60 border border-gray-800 p-5 rounded-2xl shadow-lg">
                 <div class="text-sm font-medium text-gray-400">2027 全年工作天</div>
                 <div class="text-3xl font-bold text-white mt-2" id="statTotalWorkDays">248 天</div>
-                <div class="text-xs text-gray-500 mt-1">已自動扣除例假日與國定假日</div>
+                <div class="text-xs text-gray-500 mt-1">已自動扣除例假日與國定/天災假</div>
             </div>
             <div class="bg-gray-900/60 border border-gray-800 p-5 rounded-2xl shadow-lg">
                 <div class="text-sm font-medium text-gray-400">計畫已編列總預算</div>
@@ -71,7 +71,7 @@
                     <i class="fa-solid fa-umbrella-beach text-purple-400"></i> 假別額度追蹤看板 (2027)
                 </h2>
                 <button onclick="resetLeavesDefault()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-xs font-medium rounded-lg transition">
-                    <i class="fa-solid fa-rotate-right mr-1"></i> 恢復預設假別小時額度
+                    <i class="fa-solid fa-rotate-right mr-1"></i> 將假別年度時數全數歸零
                 </button>
             </div>
             <div class="overflow-x-auto">
@@ -108,14 +108,14 @@
                     </button>
                 </div>
             </div>
-            <p class="text-xs text-gray-400"><i class="fa-solid fa-circle-info text-blue-400"></i> 點擊日期可同時設定請假、出差與內勤人天</p>
+            <p class="text-xs text-gray-400"><i class="fa-solid fa-circle-info text-blue-400"></i> 點擊日期可設定天災停班課或填寫請假、出差與內勤人天</p>
             
             <!-- 星期標題 -->
             <div class="grid grid-cols-7 gap-2 text-center font-semibold text-xs text-gray-400 uppercase">
                 <div class="text-red-400">日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div class="text-red-400">六</div>
             </div>
             <!-- 日曆格子容器 -->
-            <div id="calendarGrid" class="grid grid-cols-7 gap-2">
+            <div id="calendarGrid" class="grid grid-cols-7 gap-2.5">
                 <!-- 動態生成 -->
             </div>
         </section>
@@ -165,77 +165,94 @@
             </div>
             
             <div class="p-6 space-y-5 overflow-y-auto">
-                <!-- 請假區塊 -->
-                <div class="bg-gray-950/40 border border-gray-800/80 p-4 rounded-xl space-y-3">
-                    <div class="flex justify-between items-center">
-                        <label class="text-sm font-semibold text-purple-400 flex items-center gap-2">
-                            <i class="fa-solid fa-person-walking-luggage"></i> 請假 / 休假登記
-                        </label>
-                        <span id="leaveCalcBadge" class="text-xs text-gray-400">請假 0h ➔ 折算 0 人天</span>
+                <!-- 天災停班課開關設定 -->
+                <div class="bg-amber-950/20 border border-amber-500/30 p-4 rounded-xl flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="text-amber-400 text-xl"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                        <div>
+                            <div class="text-sm font-semibold text-white">天災停班課 (如颱風假)</div>
+                            <div class="text-xs text-gray-400">勾選後該日將視同國定假日，自動從全年工作天扣除</div>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <select id="modalLeaveType" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white">
-                            <!-- 動態填入假別 -->
-                        </select>
-                        <input type="number" id="modalLeaveHours" min="0" max="8" step="0.5" placeholder="時數 (0-8h)" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white" oninput="updateModalCalculation()">
-                        <select id="modalLeaveStatus" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white">
-                            <option value="draft">📝 草稿預排</option>
-                            <option value="approved">✅ 已核准</option>
-                        </select>
-                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="modalDisasterCheck" class="sr-only peer" onchange="toggleDisasterMode()">
+                        <div class="w-11 h-6 bg-gray-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-600"></div>
+                    </label>
                 </div>
 
-                <!-- 外部人天 (出差) -->
-                <div class="bg-gray-950/40 border border-gray-800/80 p-4 rounded-xl space-y-3">
-                    <div class="flex justify-between items-center">
-                        <label class="text-sm font-semibold text-emerald-400 flex items-center gap-2">
-                            <i class="fa-solid fa-plane-departure"></i> 外部人天 (出差)
-                        </label>
-                        <span class="text-xs text-gray-500">單位：人天 (0.5 或 1.0)</span>
+                <div id="normalDaySettings" class="space-y-5">
+                    <!-- 請假區塊 -->
+                    <div class="bg-gray-950/40 border border-gray-800/80 p-4 rounded-xl space-y-3">
+                        <div class="flex justify-between items-center">
+                            <label class="text-sm font-semibold text-purple-400 flex items-center gap-2">
+                                <i class="fa-solid fa-person-walking-luggage"></i> 請假 / 休假登記
+                            </label>
+                            <span id="leaveCalcBadge" class="text-xs text-gray-400">請假 0h ➔ 折算 0 人天</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <select id="modalLeaveType" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white">
+                                <!-- 動態填入假別 -->
+                            </select>
+                            <input type="number" id="modalLeaveHours" min="0" max="8" step="0.5" placeholder="時數 (0-8h)" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white" oninput="updateModalCalculation()">
+                            <select id="modalLeaveStatus" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white">
+                                <option value="draft">📝 草稿預排</option>
+                                <option value="approved">✅ 已核准</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <select id="modalExtProject" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white sm:col-span-1">
-                            <option value="">-- 無專案 --</option>
-                        </select>
-                        <select id="modalExtDays" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white" oninput="updateModalCalculation()">
-                            <option value="0">0 人天</option>
-                            <option value="0.5">0.5 人天</option>
-                            <option value="1">1.0 人天</option>
-                        </select>
-                        <select id="modalExtStatus" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white">
-                            <option value="draft">📝 草稿預排</option>
-                            <option value="approved">✅ 已核准</option>
-                        </select>
-                    </div>
-                </div>
 
-                <!-- 內部人天 (內勤專案) -->
-                <div class="bg-gray-950/40 border border-gray-800/80 p-4 rounded-xl space-y-3">
-                    <div class="flex justify-between items-center">
-                        <label class="text-sm font-semibold text-blue-400 flex items-center gap-2">
-                            <i class="fa-solid fa-building-user"></i> 內部人天 (內勤專案)
-                        </label>
-                        <span class="text-xs text-gray-500">單位：人天 (0.5 或 1.0)</span>
+                    <!-- 外部人天 (出差) -->
+                    <div class="bg-gray-950/40 border border-gray-800/80 p-4 rounded-xl space-y-3">
+                        <div class="flex justify-between items-center">
+                            <label class="text-sm font-semibold text-emerald-400 flex items-center gap-2">
+                                <i class="fa-solid fa-plane-departure"></i> 外部人天 (出差)
+                            </label>
+                            <span class="text-xs text-gray-500">單位：人天 (0.5 或 1.0)</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <select id="modalExtProject" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white sm:col-span-1">
+                                <option value="">-- 無專案 --</option>
+                            </select>
+                            <select id="modalExtDays" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white" oninput="updateModalCalculation()">
+                                <option value="0">0 人天</option>
+                                <option value="0.5">0.5 人天</option>
+                                <option value="1">1.0 人天</option>
+                            </select>
+                            <select id="modalExtStatus" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white">
+                                <option value="draft">📝 草稿預排</option>
+                                <option value="approved">✅ 已核准</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <select id="modalIntProject" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white sm:col-span-1">
-                            <option value="">-- 無專案 --</option>
-                        </select>
-                        <select id="modalIntDays" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white" oninput="updateModalCalculation()">
-                            <option value="0">0 人天</option>
-                            <option value="0.5">0.5 人天</option>
-                            <option value="1">1.0 人天</option>
-                        </select>
-                        <select id="modalIntStatus" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white">
-                            <option value="draft">📝 草稿預排</option>
-                            <option value="approved">✅ 已核准</option>
-                        </select>
-                    </div>
-                </div>
 
-                <!-- 即時防呆與總計提示 -->
-                <div id="modalAlertBox" class="p-3 rounded-xl border text-xs font-medium">
-                    <!-- 動態提示 -->
+                    <!-- 內部人天 (內勤專案) -->
+                    <div class="bg-gray-950/40 border border-gray-800/80 p-4 rounded-xl space-y-3">
+                        <div class="flex justify-between items-center">
+                            <label class="text-sm font-semibold text-blue-400 flex items-center gap-2">
+                                <i class="fa-solid fa-building-user"></i> 內部人天 (內勤專案)
+                            </label>
+                            <span class="text-xs text-gray-500">單位：人天 (0.5 或 1.0)</span>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            <select id="modalIntProject" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white sm:col-span-1">
+                                <option value="">-- 無專案 --</option>
+                            </select>
+                            <select id="modalIntDays" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white" oninput="updateModalCalculation()">
+                                <option value="0">0 人天</option>
+                                <option value="0.5">0.5 人天</option>
+                                <option value="1">1.0 人天</option>
+                            </select>
+                            <select id="modalIntStatus" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white">
+                                <option value="draft">📝 草稿預排</option>
+                                <option value="approved">✅ 已核准</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- 即時防呆與總計提示 -->
+                    <div id="modalAlertBox" class="p-3 rounded-xl border text-xs font-medium">
+                        <!-- 動態提示 -->
+                    </div>
                 </div>
             </div>
 
@@ -275,8 +292,7 @@
     </div>
 
     <script>
-        // 2027 台灣國定假日清單
-        const holidays2027 = {
+        const baseHolidays2027 = {
             "2027-01-01": "開國紀念日",
             "2027-01-28": "農曆春節",
             "2027-01-29": "農曆春節",
@@ -292,14 +308,15 @@
             "2027-10-11": "國慶日補假"
         };
 
+        // 預設假別清單，年度總時數全部預設為 0
         const defaultLeaves = [
-            { name: "特休", total: 22 },
-            { name: "生理假", total: 21 },
-            { name: "補休", total: 3 },
-            { name: "體檢假", total: 4 },
-            { name: "陪病假", total: 21.5 },
-            { name: "生日假", total: 8 },
-            { name: "工傷假", total: 303 }
+            { name: "特休", total: 0 },
+            { name: "生理假", total: 0 },
+            { name: "補休", total: 0 },
+            { name: "體檢假", total: 0 },
+            { name: "陪病假", total: 0 },
+            { name: "生日假", total: 0 },
+            { name: "工傷假", total: 0 }
         ];
 
         let leaves = JSON.parse(localStorage.getItem('app_leaves_2027')) || JSON.parse(JSON.stringify(defaultLeaves));
@@ -344,6 +361,7 @@
             let totalFilled = 0;
             for (let date in records) {
                 let rec = records[date];
+                if (rec.isDisaster) continue;
                 let lDays = rec.leave && rec.leave.hours ? convertLeaveHoursToDays(Number(rec.leave.hours)) : 0;
                 let eDays = rec.ext && rec.ext.days ? Number(rec.ext.days) : 0;
                 let iDays = rec.int && rec.int.days ? Number(rec.int.days) : 0;
@@ -374,9 +392,10 @@
                 let dateStr = `${yyyy}-${mm}-${dd}`;
                 let dayOfWeek = d.getDay();
                 let isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
-                let isHoliday = holidays2027[dateStr];
+                let isBaseHoliday = baseHolidays2027[dateStr];
+                let isDisasterDay = records[dateStr] && records[dateStr].isDisaster;
 
-                if (!isWeekend && !isHoliday) {
+                if (!isWeekend && !isBaseHoliday && !isDisasterDay) {
                     count++;
                 }
                 d.setDate(d.getDate() + 1);
@@ -424,7 +443,7 @@
         }
 
         function resetLeavesDefault() {
-            if (confirm('確定要恢復預設假別與小時額度嗎？')) {
+            if (confirm('確定要將所有假別的年度總時數歸零嗎？')) {
                 leaves = JSON.parse(JSON.stringify(defaultLeaves));
                 renderAll();
             }
@@ -550,7 +569,7 @@
 
             for (let i = 0; i < firstDayIndex; i++) {
                 let emptyDiv = document.createElement('div');
-                emptyDiv.className = "bg-gray-950/20 border border-gray-800/40 rounded-xl h-28 opacity-30";
+                emptyDiv.className = "bg-gray-950/20 border border-gray-800/40 rounded-xl h-32 opacity-30";
                 grid.appendChild(emptyDiv);
             }
 
@@ -561,57 +580,63 @@
                 let dateObj = new Date(currentYear, currentMonth, day);
                 let dayOfWeek = dateObj.getDay();
                 let isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
-                let holidayName = holidays2027[dateStr];
-
+                let baseHolidayName = baseHolidays2027[dateStr];
                 let rec = records[dateStr] || {};
-                let lDays = rec.leave && rec.leave.hours ? convertLeaveHoursToDays(Number(rec.leave.hours)) : 0;
-                let eDays = rec.ext && rec.ext.days ? Number(rec.ext.days) : 0;
-                let iDays = rec.int && rec.int.days ? Number(rec.int.days) : 0;
-                let totalFilled = lDays + eDays + iDays;
+                let isDisaster = rec.isDisaster;
 
                 let cell = document.createElement('div');
-                cell.className = `bg-gray-900/80 border rounded-xl p-2.5 h-28 flex flex-col justify-between cursor-pointer transition hover:border-blue-500/50 hover:bg-gray-800/60 relative group`;
+                cell.className = `bg-gray-900/80 border rounded-xl p-3 h-32 flex flex-col justify-between cursor-pointer transition hover:border-blue-500/50 hover:bg-gray-800/60 relative group`;
 
                 if (isWeekend) {
                     cell.classList.add('border-red-900/30', 'bg-red-950/10');
-                } else if (holidayName) {
+                } else if (baseHolidayName || isDisaster) {
                     cell.classList.add('border-amber-900/30', 'bg-amber-950/10');
                 } else {
                     cell.classList.add('border-gray-800');
                 }
 
                 let badgeHtml = '';
-                if (!isWeekend && !holidayName) {
+                let contentSummary = '';
+
+                if (isDisaster) {
+                    badgeHtml = `<span class="text-xs bg-amber-950 text-amber-400 border border-amber-500/40 px-2 py-0.5 rounded-md font-semibold">天災停班課</span>`;
+                } else if (!isWeekend && !baseHolidayName) {
+                    let lDays = rec.leave && rec.leave.hours ? convertLeaveHoursToDays(Number(rec.leave.hours)) : 0;
+                    let eDays = rec.ext && rec.ext.days ? Number(rec.ext.days) : 0;
+                    let iDays = rec.int && rec.int.days ? Number(rec.int.days) : 0;
+                    let totalFilled = lDays + eDays + iDays;
+
                     if (totalFilled === 1) {
-                        badgeHtml = `<span class="text-[10px] bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-medium">已填滿 1.0d</span>`;
+                        badgeHtml = `<span class="text-xs bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 px-2 py-0.5 rounded-md font-semibold">已填滿 1.0d</span>`;
                     } else if (totalFilled > 1) {
-                        badgeHtml = `<span class="text-[10px] bg-red-950/60 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded font-medium">超額 ${totalFilled}d</span>`;
+                        badgeHtml = `<span class="text-xs bg-red-950/60 text-red-400 border border-red-500/30 px-2 py-0.5 rounded-md font-semibold">超額 ${totalFilled}d</span>`;
                     } else if (totalFilled > 0 && totalFilled < 1) {
                         let missing = (1 - totalFilled).toFixed(1);
-                        badgeHtml = `<span class="text-[10px] bg-amber-950/60 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded font-medium">待填 ${missing}d</span>`;
+                        badgeHtml = `<span class="text-xs bg-amber-950/60 text-amber-400 border border-amber-500/30 px-2 py-0.5 rounded-md font-semibold">待填 ${missing}d</span>`;
                     } else {
-                        badgeHtml = `<span class="text-[10px] bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded font-medium">待填 1.0d</span>`;
+                        badgeHtml = `<span class="text-xs bg-gray-800 text-gray-400 px-2 py-0.5 rounded-md font-semibold">待填 1.0d</span>`;
                     }
                 }
 
-                let contentSummary = '';
+                if (baseHolidayName) {
+                    contentSummary += `<div class="text-xs text-amber-400 font-semibold truncate">${baseHolidayName}</div>`;
+                }
                 if (rec.leave && rec.leave.hours) {
-                    contentSummary += `<div class="text-[11px] text-purple-400 truncate">假: ${rec.leave.type} ${rec.leave.hours}h</div>`;
+                    contentSummary += `<div class="text-xs text-purple-400 font-medium truncate">假: ${rec.leave.type} ${rec.leave.hours}h</div>`;
                 }
                 if (rec.ext && Number(rec.ext.days) > 0) {
-                    contentSummary += `<div class="text-[11px] text-emerald-400 truncate">出差: ${rec.ext.days}d</div>`;
+                    contentSummary += `<div class="text-xs text-emerald-400 font-medium truncate">出差: ${rec.ext.days}d</div>`;
                 }
                 if (rec.int && Number(rec.int.days) > 0) {
-                    contentSummary += `<div class="text-[11px] text-blue-400 truncate">內: ${rec.int.days}d</div>`;
+                    contentSummary += `<div class="text-xs text-blue-400 font-medium truncate">內: ${rec.int.days}d</div>`;
                 }
 
                 cell.innerHTML = `
                     <div class="flex justify-between items-center">
-                        <span class="text-xs font-bold ${isWeekend || holidayName ? 'text-red-400' : 'text-gray-300'}">${day}</span>
+                        <span class="text-sm font-extrabold ${isWeekend || baseHolidayName || isDisaster ? 'text-red-400' : 'text-gray-200'}">${day}</span>
                         ${badgeHtml}
                     </div>
-                    ${holidayName ? `<div class="text-[10px] text-amber-400/90 truncate font-medium">${holidayName}</div>` : ''}
-                    <div class="space-y-0.5 mt-1 overflow-hidden">
+                    <div class="space-y-1 mt-1 overflow-hidden">
                         ${contentSummary}
                     </div>
                 `;
@@ -624,6 +649,11 @@
         function openDayModal(dateStr) {
             selectedDateStr = dateStr;
             document.getElementById('modalDateTitle').innerText = `設定日期: ${dateStr}`;
+
+            let rec = records[dateStr] || {};
+            let isDisaster = rec.isDisaster || false;
+            document.getElementById('modalDisasterCheck').checked = isDisaster;
+            toggleDisasterMode();
 
             let leaveSelect = document.getElementById('modalLeaveType');
             leaveSelect.innerHTML = '';
@@ -650,7 +680,6 @@
                 intProjSelect.appendChild(opt2);
             });
 
-            let rec = records[dateStr] || {};
             if (rec.leave) {
                 leaveSelect.value = rec.leave.type || leaves[0].name;
                 document.getElementById('modalLeaveHours').value = rec.leave.hours || "";
@@ -683,6 +712,16 @@
 
             updateModalCalculation();
             document.getElementById('dayModal').classList.remove('hidden');
+        }
+
+        function toggleDisasterMode() {
+            let isDisaster = document.getElementById('modalDisasterCheck').checked;
+            let normalSettings = document.getElementById('normalDaySettings');
+            if (isDisaster) {
+                normalSettings.classList.add('opacity-40', 'pointer-events-none');
+            } else {
+                normalSettings.classList.remove('opacity-40', 'pointer-events-none');
+            }
         }
 
         function closeDayModal() {
@@ -725,8 +764,16 @@
             }
         }
 
-        // 🛑 包含「總人天超額」與「假別時數不足」的強行阻擋防呆
         function saveDayData() {
+            let isDisaster = document.getElementById('modalDisasterCheck').checked;
+
+            if (isDisaster) {
+                records[selectedDateStr] = { isDisaster: true };
+                closeDayModal();
+                renderAll();
+                return;
+            }
+
             let lType = document.getElementById('modalLeaveType').value;
             let lHours = Number(document.getElementById('modalLeaveHours').value) || 0;
             let lStatus = document.getElementById('modalLeaveStatus').value;
@@ -742,19 +789,17 @@
             let lDays = convertLeaveHoursToDays(lHours);
             let totalDays = lDays + eDays + iDays;
 
-            // 1. 每日總人天防呆阻擋 (> 1.0)
             if (totalDays > 1.0) {
                 alert(`❌ 無法儲存：當日總人天為 ${totalDays} 人天，已超過每日 1.0 人天的上限！`);
                 return;
             }
 
-            // 2. 假別年度時數額度不足防呆阻擋
             if (lHours > 0) {
                 let targetLeave = leaves.find(l => l.name === lType);
                 if (targetLeave) {
                     let usedHours = 0;
                     for (let date in records) {
-                        if (date === selectedDateStr) continue; // 略過當天原本舊紀錄
+                        if (date === selectedDateStr) continue;
                         let rec = records[date];
                         if (rec.leave && rec.leave.type === lType && rec.leave.hours) {
                             usedHours += Number(rec.leave.hours);
@@ -769,6 +814,7 @@
             }
 
             records[selectedDateStr] = {
+                isDisaster: false,
                 leave: { type: lType, hours: lHours, status: lStatus },
                 ext: { project: eProj, days: eDays, status: eStatus },
                 int: { project: iProj, days: iDays, status: iStatus }
