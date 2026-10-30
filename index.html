@@ -5,1254 +5,821 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>2027 聰明人天與假別預排統計系統</title>
     <!-- Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Inter', sans-serif, "PingFang TC", "Microsoft JhengHei"; }
-        .custom-scrollbar::-webkit-scrollbar { height: 6px; width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f5f9; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        body { background-color: #0b0f19; color: #f3f4f6; font-family: system-ui, -apple-system, sans-serif; }
     </style>
 </head>
-<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
-
-    <!-- Header & Controls -->
-    <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
+<body class="min-h-screen p-4 md:p-8">
+    <div class="max-w-7xl mx-auto space-y-6">
+        
+        <!-- 頂部標題列 -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center bg-gray-900/80 border border-gray-800 p-6 rounded-2xl shadow-xl backdrop-blur-md gap-4">
             <div class="flex items-center gap-3">
-                <div class="bg-blue-600 text-white p-2 rounded-xl shadow-md">
-                    <i data-lucide="calendar-check-2" class="w-6 h-6"></i>
+                <div class="p-3 bg-blue-600/20 border border-blue-500/30 text-blue-400 rounded-xl text-2xl">
+                    <i class="fa-solid fa-calendar-days"></i>
                 </div>
                 <div>
-                    <h1 class="text-xl font-bold text-slate-900 leading-tight">2027 聰明人天與假別預排統計系統</h1>
-                    <p class="text-xs text-slate-500">草稿預排不漏計 · 假別與專案雙軌連動 · 每日 1.0 人天上限防呆</p>
+                    <h1 class="text-2xl font-bold tracking-tight text-white">2027 聰明人天與假別預排統計系統</h1>
+                    <p class="text-sm text-gray-400 mt-0.5">整合假別額度管理、雙軌審核（草稿/核准）與專案人天防呆預排</p>
                 </div>
             </div>
-
-            <!-- Global Actions -->
             <div class="flex flex-wrap items-center gap-3">
-                <!-- Toggle Mode -->
-                <div class="bg-slate-100 p-1 rounded-lg flex items-center border border-slate-200 text-xs font-medium">
-                    <button id="toggleDraftBtn" onclick="toggleDraftInclude()" class="px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 bg-white text-blue-700 shadow-sm font-semibold">
-                        <i data-lucide="eye" class="w-3.5 h-3.5"></i>
-                        <span>含草稿預排</span>
-                    </button>
-                    <button id="toggleApprovedBtn" onclick="toggleApprovedOnly()" class="px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 text-slate-600 hover:text-slate-900">
-                        <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
-                        <span>僅計已核准</span>
-                    </button>
-                </div>
-
-                <!-- Backup & Restore -->
-                <div class="flex items-center gap-1.5">
-                    <button onclick="exportData()" class="px-2.5 py-1.5 text-xs font-medium bg-white hover:bg-slate-100 border border-slate-300 rounded-lg text-slate-700 flex items-center gap-1 transition">
-                        <i data-lucide="download" class="w-3.5 h-3.5"></i> 匯出 JSON
-                    </button>
-                    <button onclick="document.getElementById('importFile').click()" class="px-2.5 py-1.5 text-xs font-medium bg-white hover:bg-slate-100 border border-slate-300 rounded-lg text-slate-700 flex items-center gap-1 transition">
-                        <i data-lucide="upload" class="w-3.5 h-3.5"></i> 匯入 JSON
-                    </button>
-                    <input type="file" id="importFile" accept=".json" class="hidden" onchange="importData(event)">
-                    <button onclick="resetData()" class="px-2.5 py-1.5 text-xs font-medium bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg text-rose-600 flex items-center gap-1 transition" title="重置為預設資料">
-                        <i data-lucide="rotate-ccw" class="w-3.5 h-3.5"></i> 重置
-                    </button>
-                </div>
-            </div>
-        </div>
-    </header>
-
-    <!-- Main Content -->
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full flex flex-col gap-6">
-
-        <!-- Banner: 2027 Annual Total Working Days & Shortfall Status -->
-        <div class="bg-gradient-to-r from-slate-900 via-indigo-950 to-blue-900 text-white rounded-2xl p-5 shadow-lg border border-slate-800">
-            <div class="flex flex-wrap items-center justify-between gap-4">
-                <div class="flex items-center gap-3">
-                    <div class="p-3 bg-white/10 backdrop-blur-md rounded-2xl border border-white/10 text-blue-400">
-                        <i data-lucide="calculator" class="w-7 h-7"></i>
-                    </div>
-                    <div>
-                        <span class="text-xs font-medium text-slate-300 uppercase tracking-wider block">2027 年度總人天與編列缺口</span>
-                        <h2 class="text-lg font-bold text-white flex items-center gap-2">
-                            2027 年全工作天概況與編列檢核
-                        </h2>
-                    </div>
-                </div>
-
-                <!-- KPI Cards Grid -->
-                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 w-full lg:w-auto">
-                    <div class="bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/10 min-w-[130px]">
-                        <div class="text-[11px] text-slate-300">2027 全年工作天</div>
-                        <div class="text-xl font-extrabold text-white mt-0.5"><span id="annualTotalWorkdays">0</span> <span class="text-xs font-normal text-slate-300">天</span></div>
-                    </div>
-                    <div class="bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/10 min-w-[130px]">
-                        <div class="text-[11px] text-slate-300">已編列計畫總預算</div>
-                        <div class="text-xl font-extrabold text-emerald-400 mt-0.5"><span id="annualAllocatedBudget">0</span> <span class="text-xs font-normal text-slate-300">天</span></div>
-                    </div>
-                    <div class="bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-xl border border-white/10 min-w-[130px]">
-                        <div class="text-[11px] text-slate-300">已實際/預排總填寫</div>
-                        <div class="text-xl font-extrabold text-blue-300 mt-0.5"><span id="annualFilledManDays">0</span> <span class="text-xs font-normal text-slate-300">天</span></div>
-                    </div>
-                    <div id="shortfallCard" class="bg-amber-500/20 backdrop-blur-md px-4 py-2.5 rounded-xl border border-amber-400/30 min-w-[150px]">
-                        <div class="text-[11px] text-amber-200" id="shortfallLabel">尚缺人天 (待編列)</div>
-                        <div class="text-xl font-extrabold text-amber-300 mt-0.5" id="shortfallValue">0 天</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Top Row Grid: Leave Balances & Fast Stats -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            <!-- Leave Balance Summary (2 cols on lg) -->
-            <div class="lg:col-span-2 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-between mb-3">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="clock" class="w-5 h-5 text-indigo-600"></i>
-                            <h2 class="font-bold text-slate-800 text-base">年度假別額度與使用統計 (小時)</h2>
-                        </div>
-                        <button onclick="openLeaveModal()" class="text-xs text-indigo-600 hover:text-indigo-800 font-semibold flex items-center gap-1 bg-indigo-50 px-2.5 py-1 rounded-lg border border-indigo-100 transition">
-                            <i data-lucide="settings" class="w-3.5 h-3.5"></i> 管理假別額度
-                        </button>
-                    </div>
-
-                    <div class="overflow-x-auto custom-scrollbar">
-                        <table class="w-full text-xs text-left text-slate-600">
-                            <thead class="bg-slate-100/80 text-slate-700 font-semibold border-b border-slate-200">
-                                <tr>
-                                    <th class="py-2 px-3">假別項目</th>
-                                    <th class="py-2 px-3 text-right">年度總時數</th>
-                                    <th class="py-2 px-3 text-right text-emerald-700">已核准用時</th>
-                                    <th class="py-2 px-3 text-right text-amber-600">草稿預排時數</th>
-                                    <th class="py-2 px-3 text-right font-bold text-slate-900">剩餘可用時數</th>
-                                    <th class="py-2 px-3 text-center">狀態</th>
-                                </tr>
-                            </thead>
-                            <tbody id="leaveSummaryTable" class="divide-y divide-slate-100">
-                                <!-- JS Populated -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-                <div class="mt-3 pt-2 border-t border-slate-100 text-[11px] text-slate-400 flex justify-between items-center">
-                    <span>* 假別換算基準：1 天 = 8 小時</span>
-                    <span id="leaveStatusHint" class="font-medium text-slate-500">當前統計包含：已核准 + 草稿預排</span>
-                </div>
-            </div>
-
-            <!-- Quick Overview & Monthly Summary -->
-            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between">
-                <div>
-                    <div class="flex items-center justify-between mb-4">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="pie-chart" class="w-5 h-5 text-blue-600"></i>
-                            <h2 class="font-bold text-slate-800 text-base"><span id="summaryMonthTitle">1</span> 月人天概況</h2>
-                        </div>
-                        <span id="monthBadge" class="text-xs px-2.5 py-0.5 rounded-full bg-blue-50 text-blue-700 font-semibold border border-blue-200">2027 年</span>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3">
-                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                            <span class="text-xs text-slate-500 block mb-1">國定假日/例假日</span>
-                            <span id="statHolidays" class="text-lg font-bold text-slate-800">0</span>
-                            <span class="text-xs text-slate-400">天</span>
-                        </div>
-                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                            <span class="text-xs text-slate-500 block mb-1">請假扣抵天數</span>
-                            <span id="statLeaves" class="text-lg font-bold text-indigo-600">0</span>
-                            <span class="text-xs text-slate-400">天</span>
-                        </div>
-                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                            <span class="text-xs text-slate-500 block mb-1">外部人天 (出差)</span>
-                            <span id="statExternal" class="text-lg font-bold text-emerald-600">0</span>
-                            <span class="text-xs text-slate-400">人天</span>
-                        </div>
-                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-100">
-                            <span class="text-xs text-slate-500 block mb-1">內部人天 (內勤)</span>
-                            <span id="statInternal" class="text-lg font-bold text-blue-600">0</span>
-                            <span class="text-xs text-slate-400">人天</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="mt-4 p-3 bg-amber-50/80 rounded-xl border border-amber-200/80 text-xs text-amber-800 flex items-start gap-2">
-                    <i data-lucide="alert-circle" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
-                    <div>
-                        <span class="font-semibold">每日編列提示：</span>
-                        每天「請假 + 出差 + 內勤」合計上限為 <strong>1.0 人天</strong>，低於 1.0 天均屬合規排程，超出 1.0 天將亮紅燈防呆警示。
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Month Navigation Bar -->
-        <div class="bg-white rounded-2xl p-4 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
-            <div class="flex items-center gap-2">
-                <button onclick="changeMonth(-1)" class="p-2 hover:bg-slate-100 rounded-xl transition text-slate-600">
-                    <i data-lucide="chevron-left" class="w-5 h-5"></i>
+                <button onclick="exportJSON()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-200 text-sm font-medium rounded-xl transition flex items-center gap-2">
+                    <i class="fa-solid fa-download"></i> 匯出 JSON
                 </button>
-                <div class="text-lg font-bold text-slate-800 flex items-center gap-2 min-w-[140px] justify-center">
-                    <i data-lucide="calendar" class="w-5 h-5 text-blue-600"></i>
-                    <span id="currentMonthDisplay">2027 年 1 月</span>
-                </div>
-                <button onclick="changeMonth(1)" class="p-2 hover:bg-slate-100 rounded-xl transition text-slate-600">
-                    <i data-lucide="chevron-right" class="w-5 h-5"></i>
+                <label class="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-200 text-sm font-medium rounded-xl transition flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-upload"></i> 匯入 JSON
+                    <input type="file" id="importFile" accept=".json" class="hidden" onchange="importJSON(event)">
+                </label>
+                <button onclick="resetSystemData()" class="px-4 py-2 bg-red-600/20 hover:bg-red-600/30 border border-red-500/30 text-red-400 text-sm font-medium rounded-xl transition flex items-center gap-2">
+                    <i class="fa-solid fa-rotate-right"></i> 系統資料重置
                 </button>
             </div>
+        </header>
 
-            <!-- Month Fast Picker Tabs -->
-            <div id="monthTabs" class="flex items-center gap-1 overflow-x-auto custom-scrollbar py-1">
-                <!-- JS Populated Month Buttons -->
+        <!-- 頂部總覽看板 -->
+        <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="bg-gray-900/60 border border-gray-800 p-5 rounded-2xl shadow-lg">
+                <div class="text-sm font-medium text-gray-400">2027 全年工作天</div>
+                <div class="text-3xl font-bold text-white mt-2" id="statTotalWorkDays">248 天</div>
+                <div class="text-xs text-gray-500 mt-1">已自動扣除例假日與國定假日</div>
             </div>
-        </div>
+            <div class="bg-gray-900/60 border border-gray-800 p-5 rounded-2xl shadow-lg">
+                <div class="text-sm font-medium text-gray-400">計畫已編列總預算</div>
+                <div class="text-3xl font-bold text-blue-400 mt-2" id="statTotalBudget">0 人天</div>
+                <div class="text-xs text-gray-500 mt-1">目前下方計畫專案總和</div>
+            </div>
+            <div class="bg-gray-900/60 border border-gray-800 p-5 rounded-2xl shadow-lg">
+                <div class="text-sm font-medium text-gray-400">已填寫 / 預排人天</div>
+                <div class="text-3xl font-bold text-emerald-400 mt-2" id="statTotalFilled">0 人天</div>
+                <div class="text-xs text-gray-500 mt-1">含請假扣減 + 出差 + 內勤</div>
+            </div>
+            <div class="bg-gray-900/60 border border-gray-800 p-5 rounded-2xl shadow-lg">
+                <div class="text-sm font-medium text-gray-400">尚缺 / 剩餘人天 (缺口)</div>
+                <div class="text-3xl font-bold text-amber-400 mt-2" id="statGap">248 人天</div>
+                <div class="text-xs text-gray-500 mt-1" id="statGapDesc">工作天 - 編列總人天</div>
+            </div>
+        </section>
 
-        <!-- Monthly Calendar Grid View -->
-        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden flex flex-col">
-            <div class="grid grid-cols-7 bg-slate-100 text-center text-xs font-semibold text-slate-600 border-b border-slate-200 divide-x divide-slate-200">
-                <div class="py-2.5 text-rose-600">週日</div>
-                <div class="py-2.5">週一</div>
-                <div class="py-2.5">週二</div>
-                <div class="py-2.5">週三</div>
-                <div class="py-2.5">週四</div>
-                <div class="py-2.5">週五</div>
-                <div class="py-2.5 text-rose-600">週六</div>
+        <!-- 假別額度追蹤區塊 -->
+        <section class="bg-gray-900/60 border border-gray-800 p-6 rounded-2xl shadow-lg space-y-4">
+            <div class="flex justify-between items-center">
+                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-umbrella-beach text-purple-400"></i> 假別額度追蹤看板 (2027)
+                </h2>
+                <button onclick="resetLeavesDefault()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-xs font-medium rounded-lg transition">
+                    <i class="fa-solid fa-rotate-right mr-1"></i> 恢復預設假別小時額度
+                </button>
             </div>
-            
-            <div id="calendarGrid" class="grid grid-cols-7 auto-rows-fr divide-x divide-y divide-slate-200 bg-slate-200">
-                <!-- JS Generated Days Cells -->
-            </div>
-        </div>
-
-        <!-- Project Budget Table -->
-        <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="briefcase" class="w-5 h-5 text-emerald-600"></i>
-                    <h2 class="font-bold text-slate-800 text-base">2027 年新計畫人天預算與編列追蹤表</h2>
-                </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="openProjectModal()" class="text-xs text-white bg-emerald-600 hover:bg-emerald-700 px-3 py-1.5 rounded-lg font-semibold flex items-center gap-1 shadow-sm transition">
-                        <i data-lucide="plus" class="w-3.5 h-3.5"></i> 新增專案
-                    </button>
-                </div>
-            </div>
-
-            <div class="overflow-x-auto custom-scrollbar">
-                <table class="w-full text-xs text-left text-slate-600">
-                    <thead class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-200">
-                        <tr>
-                            <th class="py-2.5 px-3">專案編號 / 名稱</th>
-                            <th class="py-2.5 px-3 text-right">年度總預算 (天)</th>
-                            <th class="py-2.5 px-3 text-right text-emerald-700">年度實際 (已核准)</th>
-                            <th class="py-2.5 px-3 text-right text-amber-600">草稿預排 (天)</th>
-                            <th class="py-2.5 px-3 text-right font-bold text-slate-900">剩餘預算 (天)</th>
-                            <th class="py-2.5 px-3 text-right text-blue-700"><span class="monthNumLabel">1</span>月編列 (出差)</th>
-                            <th class="py-2.5 px-3 text-right text-indigo-700"><span class="monthNumLabel">1</span>月編列 (內勤)</th>
-                            <th class="py-2.5 px-3 text-center">健康度 / 操作</th>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-800 text-xs text-gray-400 uppercase tracking-wider">
+                            <th class="py-3 px-4">假別項目</th>
+                            <th class="py-3 px-4">年度總時數 (小時)</th>
+                            <th class="py-3 px-4">已核准時數 (小時)</th>
+                            <th class="py-3 px-4">草稿預排時數 (小時)</th>
+                            <th class="py-3 px-4">剩餘可用 (小時)</th>
                         </tr>
                     </thead>
-                    <tbody id="projectBudgetTable" class="divide-y divide-slate-100">
-                        <!-- JS Populated -->
+                    <tbody id="leaveTableBody" class="divide-y divide-gray-800/60 text-sm">
+                        <!-- 動態生成 -->
                     </tbody>
-                    <tfoot id="projectBudgetFoot" class="bg-slate-50 font-bold border-t border-slate-200 text-slate-800">
-                        <!-- JS Totals -->
-                    </tfoot>
                 </table>
             </div>
-        </div>
+        </section>
 
-    </main>
-
-    <!-- Modal: Day Entry Edit -->
-    <div id="dayModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl border border-slate-100 overflow-hidden transform transition-all">
-            <div class="bg-slate-900 text-white p-4 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <i data-lucide="calendar" class="w-5 h-5 text-blue-400"></i>
-                    <h3 id="modalDateTitle" class="font-bold text-base">2027-01-01 編輯排程</h3>
+        <!-- 日曆預排區塊 -->
+        <section class="bg-gray-900/60 border border-gray-800 p-6 rounded-2xl shadow-lg space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-calendar-week text-blue-400"></i> 2027 人天與假別複合預排日曆
+                </h2>
+                <div class="flex items-center gap-3">
+                    <button onclick="changeMonth(-1)" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 text-sm rounded-lg border border-gray-700 transition">
+                        <i class="fa-solid fa-chevron-left mr-1"></i> 上一個月
+                    </button>
+                    <span id="currentMonthLabel" class="text-base font-bold text-white min-w-[110px] text-center">2027 年 1 月</span>
+                    <button onclick="changeMonth(1)" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-200 text-sm rounded-lg border border-gray-700 transition">
+                        下一個月 <i class="fa-solid fa-chevron-right ml-1"></i>
+                    </button>
                 </div>
-                <button onclick="closeModal('dayModal')" class="text-slate-400 hover:text-white p-1 rounded-lg">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
             </div>
+            <p class="text-xs text-gray-400"><i class="fa-solid fa-circle-info text-blue-400"></i> 點擊日期可同時設定請假、出差與內勤人天</p>
+            
+            <!-- 星期標題 -->
+            <div class="grid grid-cols-7 gap-2 text-center font-semibold text-xs text-gray-400 uppercase">
+                <div class="text-red-400">日</div><div>一</div><div>二</div><div>三</div><div>四</div><div>五</div><div class="text-red-400">六</div>
+            </div>
+            <!-- 日曆格子容器 -->
+            <div id="calendarGrid" class="grid grid-cols-7 gap-2">
+                <!-- 動態生成 -->
+            </div>
+        </section>
 
-            <div class="p-5 flex flex-col gap-5 max-h-[80vh] overflow-y-auto custom-scrollbar">
-                
-                <!-- Day Type & Holiday Note -->
-                <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 flex items-center justify-between">
-                    <div>
-                        <label class="text-xs font-semibold text-slate-700 block mb-1">日期屬性</label>
-                        <select id="modalDayType" onchange="onModalDayTypeChange()" class="text-xs border border-slate-300 rounded-lg p-1.5 bg-white text-slate-800 font-medium">
-                            <option value="workday">一般工作日</option>
-                            <option value="weekend">例假日 / 週末</option>
-                            <option value="holiday">國定假日 (免上班)</option>
-                        </select>
-                    </div>
-                    <div class="flex-1 ml-3">
-                        <label class="text-xs font-semibold text-slate-700 block mb-1">假日備註</label>
-                        <input type="text" id="modalHolidayNote" placeholder="如：元旦、春節..." class="w-full text-xs border border-slate-300 rounded-lg p-1.5">
-                    </div>
+        <!-- 專案預算追蹤與管理區塊 -->
+        <section class="bg-gray-900/60 border border-gray-800 p-6 rounded-2xl shadow-lg space-y-4">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="fa-solid fa-diagram-project text-emerald-400"></i> 2027 計畫/專案人天編列與追蹤表
+                </h2>
+                <div class="flex items-center gap-2">
+                    <button onclick="zeroOutBudgets()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 text-gray-300 text-xs font-medium rounded-lg transition">
+                        <i class="fa-solid fa-ban mr-1"></i> 預算全數歸零
+                    </button>
+                    <button onclick="openProjectModal()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold rounded-lg shadow-md transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-plus"></i> 新增專案
+                    </button>
                 </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="border-b border-gray-800 text-xs text-gray-400 uppercase tracking-wider">
+                            <th class="py-3 px-4">專案編號/名稱</th>
+                            <th class="py-3 px-4">年度編列預算 (人天)</th>
+                            <th class="py-3 px-4">已核准人天</th>
+                            <th class="py-3 px-4">草稿預排人天</th>
+                            <th class="py-3 px-4">剩餘可用人天</th>
+                            <th class="py-3 px-4 text-center">操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="projectTableBody" class="divide-y divide-gray-800/60 text-sm">
+                        <!-- 動態生成 -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
 
-                <!-- Section 1: 請假假別與時數 -->
-                <div class="border border-indigo-100 bg-indigo-50/40 p-3.5 rounded-xl">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-bold text-indigo-900 flex items-center gap-1.5">
-                            <i data-lucide="user-x" class="w-4 h-4 text-indigo-600"></i> 請假 / 休假登記
-                        </span>
-                        <span id="leaveCalcHint" class="text-[11px] font-semibold text-indigo-600">請假折算：0 人天</span>
+    </div>
+
+    <!-- 日期設定 Modal 彈窗 -->
+    <div id="dayModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-gray-900 border border-gray-800 w-full max-w-xl rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-5 border-b border-gray-800 flex justify-between items-center bg-gray-950/40">
+                <h3 id="modalDateTitle" class="text-lg font-bold text-white">設定日期: 2027-01-01</h3>
+                <button onclick="closeDayModal()" class="text-gray-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            
+            <div class="p-6 space-y-5 overflow-y-auto">
+                <!-- 請假區塊 -->
+                <div class="bg-gray-950/40 border border-gray-800/80 p-4 rounded-xl space-y-3">
+                    <div class="flex justify-between items-center">
+                        <label class="text-sm font-semibold text-purple-400 flex items-center gap-2">
+                            <i class="fa-solid fa-person-walking-luggage"></i> 請假 / 休假登記
+                        </label>
+                        <span id="leaveCalcBadge" class="text-xs text-gray-400">請假 0h ➔ 折算 0 人天</span>
                     </div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <select id="modalLeaveType" class="col-span-1 text-xs border border-slate-300 rounded-lg p-2 bg-white">
-                            <option value="">-- 無請假 --</option>
-                            <!-- Populated dynamically -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <select id="modalLeaveType" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white">
+                            <!-- 動態填入假別 -->
                         </select>
-                        <input type="number" id="modalLeaveHours" step="0.5" min="0" max="8" placeholder="小時 (0-8)" class="col-span-1 text-xs border border-slate-300 rounded-lg p-2">
-                        <select id="modalLeaveStatus" class="col-span-1 text-xs border border-slate-300 rounded-lg p-2 bg-white font-medium">
+                        <input type="number" id="modalLeaveHours" min="0" max="8" step="0.5" placeholder="時數 (0-8h)" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white" oninput="updateModalCalculation()">
+                        <select id="modalLeaveStatus" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white">
                             <option value="draft">📝 草稿預排</option>
                             <option value="approved">✅ 已核准</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- Section 2: 外部人天 (出差) -->
-                <div class="border border-emerald-100 bg-emerald-50/40 p-3.5 rounded-xl">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
-                            <i data-lucide="plane" class="w-4 h-4 text-emerald-600"></i> 外部人天 (出差)
-                        </span>
-                        <span class="text-[11px] text-emerald-600">單位：人天 (0.5 或 1.0)</span>
+                <!-- 外部人天 (出差) -->
+                <div class="bg-gray-950/40 border border-gray-800/80 p-4 rounded-xl space-y-3">
+                    <div class="flex justify-between items-center">
+                        <label class="text-sm font-semibold text-emerald-400 flex items-center gap-2">
+                            <i class="fa-solid fa-plane-departure"></i> 外部人天 (出差)
+                        </label>
+                        <span class="text-xs text-gray-500">單位：人天 (0.5 或 1.0)</span>
                     </div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <select id="modalExtProject" class="col-span-1 text-xs border border-slate-300 rounded-lg p-2 bg-white">
-                            <option value="">-- 無出差 --</option>
-                            <!-- Populated -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <select id="modalExtProject" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white sm:col-span-1">
+                            <option value="">-- 無專案 --</option>
                         </select>
-                        <select id="modalExtDays" class="col-span-1 text-xs border border-slate-300 rounded-lg p-2 bg-white font-medium">
+                        <select id="modalExtDays" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white" oninput="updateModalCalculation()">
                             <option value="0">0 人天</option>
                             <option value="0.5">0.5 人天</option>
-                            <option value="1.0">1.0 人天</option>
+                            <option value="1">1.0 人天</option>
                         </select>
-                        <select id="modalExtStatus" class="col-span-1 text-xs border border-slate-300 rounded-lg p-2 bg-white font-medium">
+                        <select id="modalExtStatus" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white">
                             <option value="draft">📝 草稿預排</option>
                             <option value="approved">✅ 已核准</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- Section 3: 內部人天 (內勤) -->
-                <div class="border border-blue-100 bg-blue-50/40 p-3.5 rounded-xl">
-                    <div class="flex items-center justify-between mb-2">
-                        <span class="text-xs font-bold text-blue-900 flex items-center gap-1.5">
-                            <i data-lucide="building-2" class="w-4 h-4 text-blue-600"></i> 內部人天 (內勤專案)
-                        </span>
-                        <span class="text-[11px] text-blue-600">單位：人天 (0.5 或 1.0)</span>
+                <!-- 內部人天 (內勤專案) -->
+                <div class="bg-gray-950/40 border border-gray-800/80 p-4 rounded-xl space-y-3">
+                    <div class="flex justify-between items-center">
+                        <label class="text-sm font-semibold text-blue-400 flex items-center gap-2">
+                            <i class="fa-solid fa-building-user"></i> 內部人天 (內勤專案)
+                        </label>
+                        <span class="text-xs text-gray-500">單位：人天 (0.5 或 1.0)</span>
                     </div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <select id="modalIntProject" class="col-span-1 text-xs border border-slate-300 rounded-lg p-2 bg-white">
-                            <option value="">-- 無內勤專案 --</option>
-                            <!-- Populated -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <select id="modalIntProject" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white sm:col-span-1">
+                            <option value="">-- 無專案 --</option>
                         </select>
-                        <select id="modalIntDays" class="col-span-1 text-xs border border-slate-300 rounded-lg p-2 bg-white font-medium">
+                        <select id="modalIntDays" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white" oninput="updateModalCalculation()">
                             <option value="0">0 人天</option>
                             <option value="0.5">0.5 人天</option>
-                            <option value="1.0">1.0 人天</option>
+                            <option value="1">1.0 人天</option>
                         </select>
-                        <select id="modalIntStatus" class="col-span-1 text-xs border border-slate-300 rounded-lg p-2 bg-white font-medium">
+                        <select id="modalIntStatus" class="bg-gray-900 border border-gray-700 rounded-lg p-2 text-sm text-white">
                             <option value="draft">📝 草稿預排</option>
                             <option value="approved">✅ 已核准</option>
                         </select>
                     </div>
                 </div>
 
-                <!-- Daily Validation Live Banner -->
-                <div id="modalValidationBanner" class="p-3 rounded-xl text-xs font-medium border hidden"></div>
-
+                <!-- 即時防呆與總計提示 -->
+                <div id="modalAlertBox" class="p-3 rounded-xl border text-xs font-medium">
+                    <!-- 動態提示 -->
+                </div>
             </div>
 
-            <div class="bg-slate-50 p-4 border-t border-slate-200 flex items-center justify-between">
-                <button onclick="clearDayEntry()" class="text-xs text-rose-600 hover:text-rose-800 font-semibold px-3 py-1.5 rounded-lg hover:bg-rose-50 transition">
-                    清除當日資料
-                </button>
-                <div class="flex items-center gap-2">
-                    <button onclick="closeModal('dayModal')" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-200 rounded-xl transition">取消</button>
-                    <button id="saveDayModalBtn" onclick="saveDayModal()" class="px-5 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl shadow-md transition disabled:bg-slate-300 disabled:cursor-not-allowed">儲存設定</button>
+            <div class="p-4 border-t border-gray-800 bg-gray-950/40 flex justify-between items-center">
+                <button onclick="clearDayData()" class="text-red-400 hover:text-red-300 text-xs font-medium transition">清除當日資料</button>
+                <div class="flex gap-2">
+                    <button onclick="closeDayModal()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded-xl transition">取消</button>
+                    <button id="modalSaveBtn" onclick="saveDayData()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl shadow-md transition">儲存設定</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Modal: Leave Management -->
-    <div id="leaveModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden">
-            <div class="bg-indigo-900 text-white p-4 flex items-center justify-between">
-                <h3 class="font-bold text-base flex items-center gap-2">
-                    <i data-lucide="settings" class="w-5 h-5"></i> 管理假別與年度總額度
-                </h3>
-                <button onclick="closeModal('leaveModal')" class="text-indigo-200 hover:text-white">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
+    <!-- 專案新增/編輯 Modal 彈窗 -->
+    <div id="projectModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="bg-gray-900 border border-gray-800 w-full max-w-md rounded-2xl shadow-2xl overflow-hidden flex flex-col">
+            <div class="p-5 border-b border-gray-800 flex justify-between items-center bg-gray-950/40">
+                <h3 id="projectModalTitle" class="text-lg font-bold text-white">新增專案計畫</h3>
+                <button onclick="closeProjectModal()" class="text-gray-400 hover:text-white text-lg"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <div class="p-5 flex flex-col gap-4">
-                <div id="leaveEditList" class="flex flex-col gap-2 max-h-60 overflow-y-auto custom-scrollbar pr-1">
-                    <!-- Populated JS -->
-                </div>
-                <div class="border-t border-slate-200 pt-3 flex gap-2">
-                    <input type="text" id="newLeaveName" placeholder="新假別名稱" class="text-xs border border-slate-300 rounded-lg p-2 flex-1">
-                    <input type="number" id="newLeaveQuota" placeholder="額度(小時)" class="text-xs border border-slate-300 rounded-lg p-2 w-28">
-                    <button onclick="addNewLeaveType()" class="px-3 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-700">新增</button>
-                </div>
-            </div>
-            <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-between items-center">
-                <button onclick="resetLeaveTypesToDefault()" class="text-xs text-rose-600 hover:text-rose-800 font-medium">重置假別為預設</button>
-                <button onclick="closeModal('leaveModal'); renderAll();" class="px-4 py-2 bg-slate-800 text-white text-xs font-semibold rounded-xl">完成</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal: Project Management (Add/Edit) -->
-    <div id="projectModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
-        <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-slate-100 overflow-hidden">
-            <div class="bg-emerald-900 text-white p-4 flex items-center justify-between">
-                <h3 id="projectModalTitle" class="font-bold text-base flex items-center gap-2">
-                    <i data-lucide="folder-plus" class="w-5 h-5"></i> 新增 2027 年新計畫
-                </h3>
-                <button onclick="closeModal('projectModal')" class="text-emerald-200 hover:text-white">
-                    <i data-lucide="x" class="w-5 h-5"></i>
-                </button>
-            </div>
-            <div class="p-5 flex flex-col gap-3">
-                <input type="hidden" id="editProjIndex" value="-1">
+            <div class="p-6 space-y-4">
+                <input type="hidden" id="projectEditIdx" value="-1">
                 <div>
-                    <label class="text-xs font-semibold text-slate-700 block mb-1">專案編號 / 計畫名稱</label>
-                    <input type="text" id="newProjCode" placeholder="如：06BFF-15005T 或 智慧農業研發計畫" class="w-full text-xs border border-slate-300 rounded-lg p-2">
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">專案編號 / 名稱</label>
+                    <input type="text" id="projectInputName" placeholder="例如: 06BFF-15005T" class="w-full bg-gray-950 border border-gray-700 rounded-lg p-2.5 text-sm text-white">
                 </div>
                 <div>
-                    <label class="text-xs font-semibold text-slate-700 block mb-1">年度總預算 (人天)</label>
-                    <input type="number" id="newProjBudget" step="0.5" placeholder="如：30" class="w-full text-xs border border-slate-300 rounded-lg p-2">
+                    <label class="block text-xs font-semibold text-gray-400 mb-1">年度編列預算 (人天)</label>
+                    <input type="number" id="projectInputBudget" min="0" step="0.5" placeholder="例如: 37" class="w-full bg-gray-950 border border-gray-700 rounded-lg p-2.5 text-sm text-white">
                 </div>
             </div>
-            <div class="bg-slate-50 p-4 border-t border-slate-200 flex justify-end gap-2">
-                <button onclick="closeModal('projectModal')" class="px-4 py-2 text-xs font-medium text-slate-600 rounded-xl">取消</button>
-                <button onclick="saveProjectModal()" class="px-4 py-2 bg-emerald-600 text-white text-xs font-semibold rounded-xl hover:bg-emerald-700 shadow-sm">儲存專案</button>
+            <div class="p-4 border-t border-gray-800 bg-gray-950/40 flex justify-end gap-2">
+                <button onclick="closeProjectModal()" class="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 text-sm rounded-xl transition">取消</button>
+                <button onclick="saveProjectData()" class="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl shadow-md transition">確認儲存</button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- DATA STRUCTURE & INITIAL STATE ---
-        const DEFAULT_LEAVE_TYPES = [
-            { id: 'l1', name: '特休', totalHours: 22 },
-            { id: 'l2', name: '生理假', totalHours: 21 },
-            { id: 'l3', name: '補休', totalHours: 3 },
-            { id: 'l4', name: '體檢假', totalHours: 4 },
-            { id: 'l5', name: '陪病假', totalHours: 21.5 },
-            { id: 'l6', name: '生日假', totalHours: 8 },
-            { id: 'l7', name: '工傷假', totalHours: 303 }
+        // 2027 台灣國定假日清單
+        const holidays2027 = {
+            "2027-01-01": "開國紀念日",
+            "2027-01-28": "農曆春節",
+            "2027-01-29": "農曆春節",
+            "2027-02-01": "農曆春節",
+            "2027-02-02": "農曆春節",
+            "2027-02-03": "農曆春節",
+            "2027-02-28": "和平紀念日",
+            "2027-03-01": "和平紀念日補假",
+            "2027-04-05": "兒童節與民族掃墓節",
+            "2027-05-31": "端午節",
+            "2027-09-15": "中秋節",
+            "2027-10-10": "國慶日",
+            "2027-10-11": "國慶日補假"
+        };
+
+        const defaultLeaves = [
+            { name: "特休", total: 22 },
+            { name: "生理假", total: 21 },
+            { name: "補休", total: 3 },
+            { name: "體檢假", total: 4 },
+            { name: "陪病假", total: 21.5 },
+            { name: "生日假", total: 8 },
+            { name: "工傷假", total: 303 }
         ];
 
-        // 預設專案清單：完全空白（0個舊專案），由使用者自主新增2027年新專案
-        const DEFAULT_PROJECTS = [];
+        let leaves = JSON.parse(localStorage.getItem('app_leaves_2027')) || JSON.parse(JSON.stringify(defaultLeaves));
+        let projects = JSON.parse(localStorage.getItem('app_projects_2027')) || [];
+        let records = JSON.parse(localStorage.getItem('app_records_2027')) || {};
 
-        // 2027 Official Holidays Map (Taiwan)
-        const HOLIDAYS_2027 = {
-            '2027-01-01': '元旦',
-            '2027-02-05': '農曆小年夜',
-            '2027-02-06': '除夕',
-            '2027-02-07': '春節初一',
-            '2027-02-08': '春節初二',
-            '2027-02-09': '春節初三',
-            '2027-02-10': '春節初四',
-            '2027-02-28': '228和平紀念日',
-            '2027-04-04': '兒童節',
-            '2027-04-05': '清明節',
-            '2027-06-09': '端午節',
-            '2027-09-15': '中秋節',
-            '2027-10-10': '國慶日'
-        };
+        let currentYear = 2027;
+        let currentMonth = 0; // 0 = 1月
+        let selectedDateStr = "";
 
-        let state = {
-            year: 2027,
-            currentMonth: 1, // 1 to 12
-            includeDraft: true, // true: include draft, false: approved only
-            leaveTypes: JSON.parse(localStorage.getItem('smart_leave_types')) || DEFAULT_LEAVE_TYPES,
-            projects: JSON.parse(localStorage.getItem('smart_projects')) || DEFAULT_PROJECTS,
-            daysData: JSON.parse(localStorage.getItem('smart_days_data')) || {} 
-        };
-
-        let activeEditDate = null;
-
-        // --- INITIALIZATION ---
-        window.onload = function() {
-            renderMonthTabs();
+        document.addEventListener('DOMContentLoaded', () => {
             renderAll();
-            lucide.createIcons();
-        };
+        });
 
         function saveToLocalStorage() {
-            localStorage.setItem('smart_leave_types', JSON.stringify(state.leaveTypes));
-            localStorage.setItem('smart_projects', JSON.stringify(state.projects));
-            localStorage.setItem('smart_days_data', JSON.stringify(state.daysData));
+            localStorage.setItem('app_leaves_2027', JSON.stringify(leaves));
+            localStorage.setItem('app_projects_2027', JSON.stringify(projects));
+            localStorage.setItem('app_records_2027', JSON.stringify(records));
         }
 
-        // --- CORE CALCULATIONS & CONVERSION ---
-        function convertLeaveHoursToManDays(hours) {
-            const h = parseFloat(hours) || 0;
-            if (h <= 0) return 0;
-            if (h <= 2.0) return 0;      // 0.5 - 2小時：0人天
-            if (h <= 4.0) return 0.5;    // 2.5 - 4小時：0.5人天
-            return 1.0;                  // 4.5 - 8小時：1人天
-        }
-
-        function getDayEntry(dateStr) {
-            return state.daysData[dateStr] || null;
-        }
-
-        function isItemActive(status) {
-            if (!status) return false;
-            if (state.includeDraft) return true; // Show draft & approved
-            return status === 'approved'; // Approved only
-        }
-
-        // 計算 2027 全年總工作天 (扣除國定假日與週末)
-        function calculate2027TotalWorkdays() {
-            let totalDays = 0;
-            const start = new Date(2027, 0, 1);
-            const end = new Date(2027, 11, 31);
-            
-            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                const year = d.getFullYear();
-                const month = String(d.getMonth() + 1).padStart(2, '0');
-                const day = String(d.getDate()).padStart(2, '0');
-                const dateStr = `${year}-${month}-${day}`;
-                
-                const dayOfWeek = d.getDay();
-                const isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
-                const isHoliday = !!HOLIDAYS_2027[dateStr];
-
-                // 既非週末亦非國定假日才算工作天
-                if (!isWeekend && !isHoliday) {
-                    totalDays++;
-                }
-            }
-            return totalDays;
-        }
-
-        // --- RENDER FUNCTIONS ---
         function renderAll() {
-            renderHeaderToggle();
-            renderAnnualOverview();
-            renderLeaveSummary();
+            renderLeavesTable();
+            renderProjectsTable();
             renderCalendar();
-            renderProjectBudget();
             renderQuickStats();
             saveToLocalStorage();
-            lucide.createIcons();
         }
 
-        function renderAnnualOverview() {
-            const totalWorkdays = calculate2027TotalWorkdays();
-            
-            // 計算已編列專案總預算
-            const totalAllocatedBudget = state.projects.reduce((sum, p) => sum + (parseFloat(p.budget) || 0), 0);
-            
-            // 計算全年已填寫人天 (請假 + 出差 + 內勤)
+        function convertLeaveHoursToDays(hours) {
+            if (hours >= 4.5 && hours <= 8) return 1.0;
+            if (hours >= 2.5 && hours <= 4) return 0.5;
+            return 0;
+        }
+
+        function renderQuickStats() {
+            let totalWorkDays = calculate2027WorkDays();
+            document.getElementById('statTotalWorkDays').innerText = totalWorkDays + " 天";
+
+            let totalBudget = projects.reduce((sum, p) => sum + Number(p.budget), 0);
+            document.getElementById('statTotalBudget').innerText = totalBudget + " 人天";
+
             let totalFilled = 0;
-            Object.values(state.daysData).forEach(day => {
-                if (day.leave && day.leave.hours && isItemActive(day.leave.status)) {
-                    totalFilled += convertLeaveHoursToManDays(day.leave.hours);
-                }
-                if (day.ext && day.ext.days && isItemActive(day.ext.status)) {
-                    totalFilled += parseFloat(day.ext.days) || 0;
-                }
-                if (day.int && day.int.days && isItemActive(day.int.status)) {
-                    totalFilled += parseFloat(day.int.days) || 0;
-                }
-            });
+            for (let date in records) {
+                let rec = records[date];
+                let lDays = rec.leave && rec.leave.hours ? convertLeaveHoursToDays(Number(rec.leave.hours)) : 0;
+                let eDays = rec.ext && rec.ext.days ? Number(rec.ext.days) : 0;
+                let iDays = rec.int && rec.int.days ? Number(rec.int.days) : 0;
+                totalFilled += (lDays + eDays + iDays);
+            }
+            document.getElementById('statTotalFilled').innerText = totalFilled + " 人天";
 
-            const shortfall = totalWorkdays - totalAllocatedBudget;
-
-            document.getElementById('annualTotalWorkdays').textContent = totalWorkdays;
-            document.getElementById('annualAllocatedBudget').textContent = totalAllocatedBudget.toFixed(1);
-            document.getElementById('annualFilledManDays').textContent = totalFilled.toFixed(1);
-
-            const shortfallCard = document.getElementById('shortfallCard');
-            const shortfallLabel = document.getElementById('shortfallLabel');
-            const shortfallValue = document.getElementById('shortfallValue');
-
-            if (shortfall > 0) {
-                shortfallCard.className = "bg-rose-500/20 backdrop-blur-md px-4 py-2.5 rounded-xl border border-rose-400/40 min-w-[150px]";
-                shortfallLabel.textContent = "尚缺人天 (待編列計畫)";
-                shortfallLabel.className = "text-[11px] text-rose-200 font-semibold";
-                shortfallValue.textContent = `缺 ${shortfall.toFixed(1)} 天`;
-                shortfallValue.className = "text-xl font-extrabold text-rose-300 mt-0.5";
-            } else if (shortfall === 0) {
-                shortfallCard.className = "bg-emerald-500/20 backdrop-blur-md px-4 py-2.5 rounded-xl border border-emerald-400/40 min-w-[150px]";
-                shortfallLabel.textContent = "預算剛好填滿";
-                shortfallLabel.className = "text-[11px] text-emerald-200 font-semibold";
-                shortfallValue.textContent = "已完全編滿";
-                shortfallValue.className = "text-xl font-extrabold text-emerald-300 mt-0.5";
+            let gap = totalWorkDays - totalBudget;
+            let gapEl = document.getElementById('statGap');
+            gapEl.innerText = gap + " 人天";
+            if (gap < 0) {
+                gapEl.className = "text-3xl font-bold text-red-400 mt-2";
+                document.getElementById('statGapDesc').innerText = "預算超過工作天數！";
             } else {
-                shortfallCard.className = "bg-amber-500/20 backdrop-blur-md px-4 py-2.5 rounded-xl border border-amber-400/40 min-w-[150px]";
-                shortfallLabel.textContent = "已超出工作天總額";
-                shortfallLabel.className = "text-[11px] text-amber-200 font-semibold";
-                shortfallValue.textContent = `多 ${Math.abs(shortfall).toFixed(1)} 天`;
-                shortfallValue.className = "text-xl font-extrabold text-amber-300 mt-0.5";
+                gapEl.className = "text-3xl font-bold text-amber-400 mt-2";
+                document.getElementById('statGapDesc').innerText = "工作天 - 編列總人天";
             }
         }
 
-        function renderHeaderToggle() {
-            const draftBtn = document.getElementById('toggleDraftBtn');
-            const appBtn = document.getElementById('toggleApprovedBtn');
-            const hint = document.getElementById('leaveStatusHint');
+        function calculate2027WorkDays() {
+            let count = 0;
+            let d = new Date(2027, 0, 1);
+            let end = new Date(2027, 11, 31);
+            while (d <= end) {
+                let yyyy = d.getFullYear();
+                let mm = String(d.getMonth() + 1).padStart(2, '0');
+                let dd = String(d.getDate()).padStart(2, '0');
+                let dateStr = `${yyyy}-${mm}-${dd}`;
+                let dayOfWeek = d.getDay();
+                let isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                let isHoliday = holidays2027[dateStr];
 
-            if (state.includeDraft) {
-                draftBtn.className = "px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 bg-white text-blue-700 shadow-sm font-semibold";
-                appBtn.className = "px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 text-slate-600 hover:text-slate-900";
-                hint.textContent = "當前統計包含：已核准 + 📝 草稿預排";
-            } else {
-                appBtn.className = "px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 bg-white text-emerald-700 shadow-sm font-semibold";
-                draftBtn.className = "px-3 py-1.5 rounded-md transition-all flex items-center gap-1.5 text-slate-600 hover:text-slate-900";
-                hint.textContent = "當前統計僅計算：✅ 已核准項目";
+                if (!isWeekend && !isHoliday) {
+                    count++;
+                }
+                d.setDate(d.getDate() + 1);
             }
-
-            document.querySelectorAll('.monthNumLabel').forEach(el => el.textContent = state.currentMonth);
-            document.getElementById('summaryMonthTitle').textContent = state.currentMonth;
-            document.getElementById('currentMonthDisplay').textContent = `${state.year} 年 ${state.currentMonth} 月`;
+            return count;
         }
 
-        function renderLeaveSummary() {
-            const tbody = document.getElementById('leaveSummaryTable');
+        function renderLeavesTable() {
+            let tbody = document.getElementById('leaveTableBody');
             tbody.innerHTML = '';
 
-            const approvedUsage = {};
-            const draftUsage = {};
+            leaves.forEach((l, idx) => {
+                let approvedHours = 0;
+                let draftHours = 0;
 
-            Object.values(state.daysData).forEach(day => {
-                if (day.leave && day.leave.typeId && day.leave.hours > 0) {
-                    const tid = day.leave.typeId;
-                    const hrs = parseFloat(day.leave.hours) || 0;
-                    if (day.leave.status === 'approved') {
-                        approvedUsage[tid] = (approvedUsage[tid] || 0) + hrs;
-                    } else if (day.leave.status === 'draft') {
-                        draftUsage[tid] = (draftUsage[tid] || 0) + hrs;
+                for (let date in records) {
+                    let rec = records[date];
+                    if (rec.leave && rec.leave.type === l.name && rec.leave.hours) {
+                        let h = Number(rec.leave.hours);
+                        if (rec.leave.status === 'approved') approvedHours += h;
+                        else draftHours += h;
                     }
                 }
-            });
 
-            state.leaveTypes.forEach(type => {
-                const appHrs = approvedUsage[type.id] || 0;
-                const draftHrs = draftUsage[type.id] || 0;
-                
-                const effectiveUsed = state.includeDraft ? (appHrs + draftHrs) : appHrs;
-                const remaining = type.totalHours - effectiveUsed;
+                let remaining = l.total - approvedHours - draftHours;
 
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition";
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-800/40 transition";
                 tr.innerHTML = `
-                    <td class="py-2 px-3 font-semibold text-slate-800">${type.name}</td>
-                    <td class="py-2 px-3 text-right font-medium">${type.totalHours} h</td>
-                    <td class="py-2 px-3 text-right text-emerald-600 font-medium">${appHrs} h</td>
-                    <td class="py-2 px-3 text-right text-amber-600 font-medium">${draftHrs > 0 ? '+' + draftHrs : 0} h</td>
-                    <td class="py-2 px-3 text-right font-bold ${remaining < 0 ? 'text-rose-600' : 'text-slate-900'}">${remaining} h</td>
-                    <td class="py-2 px-3 text-center">
-                        ${remaining < 0 
-                            ? `<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full text-[10px] font-bold">已超額</span>`
-                            : `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-[10px]">正常</span>`}
+                    <td class="py-3 px-4 font-medium text-white">${l.name}</td>
+                    <td class="py-3 px-4">
+                        <input type="number" step="0.5" value="${l.total}" class="w-24 bg-gray-950 border border-gray-700 rounded px-2 py-1 text-white text-sm" onchange="updateLeaveTotal(${idx}, this.value)">
+                    </td>
+                    <td class="py-3 px-4 text-emerald-400">${approvedHours} h</td>
+                    <td class="py-3 px-4 text-amber-400">${draftHours} h</td>
+                    <td class="py-3 px-4 font-semibold ${remaining < 0 ? 'text-red-400' : 'text-blue-400'}">${remaining} h</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function updateLeaveTotal(idx, val) {
+            leaves[idx].total = Number(val);
+            renderAll();
+        }
+
+        function resetLeavesDefault() {
+            if (confirm('確定要恢復預設假別與小時額度嗎？')) {
+                leaves = JSON.parse(JSON.stringify(defaultLeaves));
+                renderAll();
+            }
+        }
+
+        function renderProjectsTable() {
+            let tbody = document.getElementById('projectTableBody');
+            tbody.innerHTML = '';
+
+            if (projects.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="py-6 text-center text-gray-500 text-sm">尚無專案計畫，請點擊上方「新增專案」建立 2027 新計畫</td></tr>`;
+                return;
+            }
+
+            projects.forEach((p, idx) => {
+                let approvedDays = 0;
+                let draftDays = 0;
+
+                for (let date in records) {
+                    let rec = records[date];
+                    if (rec.ext && rec.ext.project === p.name && rec.ext.days) {
+                        let days = Number(rec.ext.days);
+                        if (rec.ext.status === 'approved') approvedDays += days;
+                        else draftDays += days;
+                    }
+                    if (rec.int && rec.int.project === p.name && rec.int.days) {
+                        let days = Number(rec.int.days);
+                        if (rec.int.status === 'approved') approvedDays += days;
+                        else draftDays += days;
+                    }
+                }
+
+                let remaining = p.budget - approvedDays - draftDays;
+
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-800/40 transition";
+                tr.innerHTML = `
+                    <td class="py-3 px-4 font-medium text-white">${p.name}</td>
+                    <td class="py-3 px-4 text-blue-400 font-semibold">${p.budget} 天</td>
+                    <td class="py-3 px-4 text-emerald-400">${approvedDays} 天</td>
+                    <td class="py-3 px-4 text-amber-400">${draftDays} 天</td>
+                    <td class="py-3 px-4 font-semibold ${remaining < 0 ? 'text-red-400' : 'text-gray-300'}">${remaining} 天</td>
+                    <td class="py-3 px-4 text-center space-x-2">
+                        <button onclick="editProject(${idx})" class="text-gray-400 hover:text-white text-xs px-2 py-1 bg-gray-800 rounded border border-gray-700">編輯</button>
+                        <button onclick="deleteProject(${idx})" class="text-red-400 hover:text-red-300 text-xs px-2 py-1 bg-red-950/40 rounded border border-red-900/40">刪除</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
             });
         }
 
-        function renderMonthTabs() {
-            const container = document.getElementById('monthTabs');
-            container.innerHTML = '';
-            for (let m = 1; m <= 12; m++) {
-                const btn = document.createElement('button');
-                btn.onclick = () => { state.currentMonth = m; renderAll(); };
-                const isActive = state.currentMonth === m;
-                btn.className = `px-3 py-1 rounded-xl text-xs font-semibold whitespace-nowrap transition ${
-                    isActive 
-                        ? 'bg-blue-600 text-white shadow-sm' 
-                        : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`;
-                btn.textContent = `${m}月`;
-                container.appendChild(btn);
+        function zeroOutBudgets() {
+            if (confirm('確定要將所有專案的預算天數歸零嗎？')) {
+                projects.forEach(p => p.budget = 0);
+                renderAll();
             }
         }
 
-        function renderCalendar() {
-            const grid = document.getElementById('calendarGrid');
-            grid.innerHTML = '';
+        function openProjectModal(idx = -1) {
+            document.getElementById('projectEditIdx').value = idx;
+            if (idx >= 0) {
+                document.getElementById('projectModalTitle').innerText = "編輯專案計畫";
+                document.getElementById('projectInputName').value = projects[idx].name;
+                document.getElementById('projectInputBudget').value = projects[idx].budget;
+            } else {
+                document.getElementById('projectModalTitle').innerText = "新增專案計畫";
+                document.getElementById('projectInputName').value = "";
+                document.getElementById('projectInputBudget').value = "";
+            }
+            document.getElementById('projectModal').classList.remove('hidden');
+        }
 
-            const year = state.year;
-            const month = state.currentMonth;
+        function closeProjectModal() {
+            document.getElementById('projectModal').classList.add('hidden');
+        }
 
-            const firstDay = new Date(year, month - 1, 1);
-            const daysInMonth = new Date(year, month, 0).getDate();
-            const startDayOfWeek = firstDay.getDay();
+        function saveProjectData() {
+            let idx = Number(document.getElementById('projectEditIdx').value);
+            let name = document.getElementById('projectInputName').value.trim();
+            let budget = Number(document.getElementById('projectInputBudget').value);
 
-            // Padding
-            for (let i = 0; i < startDayOfWeek; i++) {
-                const pad = document.createElement('div');
-                pad.className = "bg-slate-50/50 min-h-[105px] border-b border-slate-200";
-                grid.appendChild(pad);
+            if (!name) {
+                alert('請輸入專案編號/名稱');
+                return;
             }
 
-            for (let d = 1; d <= daysInMonth; d++) {
-                const dateStr = `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
-                const dateObj = new Date(year, month - 1, d);
-                const dayOfWeek = dateObj.getDay();
-                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+            if (idx >= 0) {
+                projects[idx].name = name;
+                projects[idx].budget = budget;
+            } else {
+                projects.push({ name, budget });
+            }
 
-                const entry = getDayEntry(dateStr) || {};
-                
-                const holidayName = HOLIDAYS_2027[dateStr] || entry.holidayNote || '';
-                const isHoliday = !!HOLIDAYS_2027[dateStr] || entry.type === 'holiday' || (isWeekend && entry.type !== 'workday');
+            closeProjectModal();
+            renderAll();
+        }
 
-                let leaveDays = 0, extDays = 0, intDays = 0;
+        function editProject(idx) {
+            openProjectModal(idx);
+        }
 
-                if (entry.leave && entry.leave.hours && isItemActive(entry.leave.status)) {
-                    leaveDays = convertLeaveHoursToManDays(entry.leave.hours);
+        function deleteProject(idx) {
+            if (confirm(`確定要刪除專案「${projects[idx].name}」嗎？`)) {
+                projects.splice(idx, 1);
+                renderAll();
+            }
+        }
+
+        function changeMonth(direction) {
+            currentMonth += direction;
+            if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+            else if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            document.getElementById('currentMonthLabel').innerText = `${currentYear} 年 ${currentMonth + 1} 月`;
+            let grid = document.getElementById('calendarGrid');
+            grid.innerHTML = '';
+
+            let firstDayIndex = new Date(currentYear, currentMonth, 1).getDay();
+            let totalDays = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+            for (let i = 0; i < firstDayIndex; i++) {
+                let emptyDiv = document.createElement('div');
+                emptyDiv.className = "bg-gray-950/20 border border-gray-800/40 rounded-xl h-28 opacity-30";
+                grid.appendChild(emptyDiv);
+            }
+
+            for (let day = 1; day <= totalDays; day++) {
+                let mm = String(currentMonth + 1).padStart(2, '0');
+                let dd = String(day).padStart(2, '0');
+                let dateStr = `${currentYear}-${mm}-${dd}`;
+                let dateObj = new Date(currentYear, currentMonth, day);
+                let dayOfWeek = dateObj.getDay();
+                let isWeekend = (dayOfWeek === 0 || dayOfWeek === 6);
+                let holidayName = holidays2027[dateStr];
+
+                let rec = records[dateStr] || {};
+                let lDays = rec.leave && rec.leave.hours ? convertLeaveHoursToDays(Number(rec.leave.hours)) : 0;
+                let eDays = rec.ext && rec.ext.days ? Number(rec.ext.days) : 0;
+                let iDays = rec.int && rec.int.days ? Number(rec.int.days) : 0;
+                let totalFilled = lDays + eDays + iDays;
+
+                let cell = document.createElement('div');
+                cell.className = `bg-gray-900/80 border rounded-xl p-2.5 h-28 flex flex-col justify-between cursor-pointer transition hover:border-blue-500/50 hover:bg-gray-800/60 relative group`;
+
+                if (isWeekend) {
+                    cell.classList.add('border-red-900/30', 'bg-red-950/10');
+                } else if (holidayName) {
+                    cell.classList.add('border-amber-900/30', 'bg-amber-950/10');
+                } else {
+                    cell.classList.add('border-gray-800');
                 }
-                if (entry.ext && entry.ext.days && isItemActive(entry.ext.status)) {
-                    extDays = parseFloat(entry.ext.days) || 0;
+
+                let badgeHtml = '';
+                if (!isWeekend && !holidayName) {
+                    if (totalFilled === 1) {
+                        badgeHtml = `<span class="text-[10px] bg-emerald-950/60 text-emerald-400 border border-emerald-500/30 px-1.5 py-0.5 rounded font-medium">已填滿 1.0d</span>`;
+                    } else if (totalFilled > 1) {
+                        badgeHtml = `<span class="text-[10px] bg-red-950/60 text-red-400 border border-red-500/30 px-1.5 py-0.5 rounded font-medium">超額 ${totalFilled}d</span>`;
+                    } else if (totalFilled > 0 && totalFilled < 1) {
+                        let missing = (1 - totalFilled).toFixed(1);
+                        badgeHtml = `<span class="text-[10px] bg-amber-950/60 text-amber-400 border border-amber-500/30 px-1.5 py-0.5 rounded font-medium">待填 ${missing}d</span>`;
+                    } else {
+                        badgeHtml = `<span class="text-[10px] bg-gray-800 text-gray-400 px-1.5 py-0.5 rounded font-medium">待填 1.0d</span>`;
+                    }
                 }
-                if (entry.int && entry.int.days && isItemActive(entry.int.status)) {
-                    intDays = parseFloat(entry.int.days) || 0;
+
+                let contentSummary = '';
+                if (rec.leave && rec.leave.hours) {
+                    contentSummary += `<div class="text-[11px] text-purple-400 truncate">假: ${rec.leave.type} ${rec.leave.hours}h</div>`;
+                }
+                if (rec.ext && Number(rec.ext.days) > 0) {
+                    contentSummary += `<div class="text-[11px] text-emerald-400 truncate">出差: ${rec.ext.days}d</div>`;
+                }
+                if (rec.int && Number(rec.int.days) > 0) {
+                    contentSummary += `<div class="text-[11px] text-blue-400 truncate">內: ${rec.int.days}d</div>`;
                 }
 
-                const totalDailyManDays = leaveDays + extDays + intDays;
-                const isOverLimit = totalDailyManDays > 1.001; // 上限 1 人天防呆
-                const isUnderLimit = !isHoliday && totalDailyManDays > 0 && totalDailyManDays < 0.999; // 一般工作日少填提示
-
-                const cell = document.createElement('div');
-                cell.onclick = () => openDayModal(dateStr);
-                cell.className = `min-h-[105px] p-1.5 flex flex-col justify-between cursor-pointer transition border-b border-slate-200 ${
-                    isWeekend ? 'bg-slate-50/80' : 'bg-white hover:bg-blue-50/30'
-                } ${isOverLimit ? 'ring-2 ring-rose-500 ring-inset bg-rose-50/30' : ''} ${isUnderLimit ? 'bg-amber-50/20' : ''}`;
-
-                let headerHTML = `
-                    <div class="flex items-center justify-between text-xs mb-1">
-                        <span class="font-bold ${isWeekend || isHoliday ? 'text-rose-600' : 'text-slate-700'}">${d}</span>
-                        ${holidayName ? `<span class="text-[10px] bg-rose-100 text-rose-700 px-1 py-0.2 rounded font-medium truncate max-w-[70px]" title="${holidayName}">${holidayName}</span>` : ''}
+                cell.innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-bold ${isWeekend || holidayName ? 'text-red-400' : 'text-gray-300'}">${day}</span>
+                        ${badgeHtml}
+                    </div>
+                    ${holidayName ? `<div class="text-[10px] text-amber-400/90 truncate font-medium">${holidayName}</div>` : ''}
+                    <div class="space-y-0.5 mt-1 overflow-hidden">
+                        ${contentSummary}
                     </div>
                 `;
 
-                let contentHTML = `<div class="flex flex-col gap-1 my-auto">`;
-
-                if (entry.leave && entry.leave.hours > 0) {
-                    const lType = state.leaveTypes.find(t => t.id === entry.leave.typeId);
-                    const lName = lType ? lType.name : '請假';
-                    const isDraft = entry.leave.status === 'draft';
-                    const convertedManDays = convertLeaveHoursToManDays(entry.leave.hours);
-                    contentHTML += `
-                        <div class="text-[11px] px-1.5 py-0.5 rounded flex items-center justify-between ${isDraft ? 'bg-amber-50 text-amber-800 border border-amber-200/80' : 'bg-indigo-50 text-indigo-800 border border-indigo-200'}">
-                            <span class="truncate">🌴 ${lName}</span>
-                            <span class="font-bold shrink-0">${entry.leave.hours}h (${convertedManDays}d) ${isDraft ? '📝' : '✅'}</span>
-                        </div>
-                    `;
-                }
-
-                if (entry.ext && entry.ext.days > 0) {
-                    const isDraft = entry.ext.status === 'draft';
-                    contentHTML += `
-                        <div class="text-[11px] px-1.5 py-0.5 rounded flex items-center justify-between ${isDraft ? 'bg-amber-50 text-amber-800 border border-amber-200/80' : 'bg-emerald-50 text-emerald-800 border border-emerald-200'}">
-                            <span class="truncate" title="${entry.ext.projCode}">✈️ ${entry.ext.projCode}</span>
-                            <span class="font-bold shrink-0">${entry.ext.days}d ${isDraft ? '📝' : '✅'}</span>
-                        </div>
-                    `;
-                }
-
-                if (entry.int && entry.int.days > 0) {
-                    const isDraft = entry.int.status === 'draft';
-                    contentHTML += `
-                        <div class="text-[11px] px-1.5 py-0.5 rounded flex items-center justify-between ${isDraft ? 'bg-amber-50 text-amber-800 border border-amber-200/80' : 'bg-blue-50 text-blue-800 border border-blue-200'}">
-                            <span class="truncate" title="${entry.int.projCode}">🏢 ${entry.int.projCode}</span>
-                            <span class="font-bold shrink-0">${entry.int.days}d ${isDraft ? '📝' : '✅'}</span>
-                        </div>
-                    `;
-                }
-
-                contentHTML += `</div>`;
-
-                let footerHTML = ``;
-                if (isOverLimit) {
-                    footerHTML = `<div class="text-[10px] text-rose-600 font-bold bg-rose-100 px-1 rounded text-center">⚠️ 超出 ${totalDailyManDays.toFixed(1)}人天</div>`;
-                } else if (isUnderLimit) {
-                    const missing = (1.0 - totalDailyManDays).toFixed(1);
-                    footerHTML = `<div class="text-[10px] text-amber-700 font-semibold bg-amber-100 px-1 rounded flex justify-between"><span>已填 ${totalDailyManDays.toFixed(1)}d</span><span>少填 ${missing}d</span></div>`;
-                } else if (totalDailyManDays > 0) {
-                    footerHTML = `<div class="text-[10px] text-emerald-600 font-bold text-right">已填滿 1.0d</div>`;
-                }
-
-                cell.innerHTML = headerHTML + contentHTML + footerHTML;
+                cell.onclick = () => openDayModal(dateStr);
                 grid.appendChild(cell);
             }
         }
 
-        function renderProjectBudget() {
-            const tbody = document.getElementById('projectBudgetTable');
-            const tfoot = document.getElementById('projectBudgetFoot');
-            tbody.innerHTML = '';
-
-            const currentMonthStr = String(state.currentMonth).padStart(2, '0');
-
-            const projApproved = {};
-            const projDraft = {};
-            const projMonthExt = {};
-            const projMonthInt = {};
-
-            Object.entries(state.daysData).forEach(([dateStr, day]) => {
-                const isCurrentMonth = dateStr.startsWith(`${state.year}-${currentMonthStr}`);
-
-                if (day.ext && day.ext.projCode && day.ext.days > 0) {
-                    const code = day.ext.projCode;
-                    const d = parseFloat(day.ext.days) || 0;
-                    if (day.ext.status === 'approved') {
-                        projApproved[code] = (projApproved[code] || 0) + d;
-                    } else if (day.ext.status === 'draft') {
-                        projDraft[code] = (projDraft[code] || 0) + d;
-                    }
-
-                    if (isCurrentMonth && isItemActive(day.ext.status)) {
-                        projMonthExt[code] = (projMonthExt[code] || 0) + d;
-                    }
-                }
-
-                if (day.int && day.int.projCode && day.int.days > 0) {
-                    const code = day.int.projCode;
-                    const d = parseFloat(day.int.days) || 0;
-                    if (day.int.status === 'approved') {
-                        projApproved[code] = (projApproved[code] || 0) + d;
-                    } else if (day.int.status === 'draft') {
-                        projDraft[code] = (projDraft[code] || 0) + d;
-                    }
-
-                    if (isCurrentMonth && isItemActive(day.int.status)) {
-                        projMonthInt[code] = (projMonthInt[code] || 0) + d;
-                    }
-                }
-            });
-
-            if (state.projects.length === 0) {
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="8" class="text-center py-8 text-slate-400">
-                            目前尚未新增任何 2027 年新計畫。<br>
-                            <button onclick="openProjectModal()" class="mt-2 text-xs text-emerald-600 underline font-semibold">點此新增第一個新專案</button>
-                        </td>
-                    </tr>
-                `;
-                tfoot.innerHTML = '';
-                return;
-            }
-
-            let sumBudget = 0, sumApproved = 0, sumDraft = 0, sumRemaining = 0, sumMExt = 0, sumMInt = 0;
-
-            state.projects.forEach((proj, idx) => {
-                const appD = projApproved[proj.code] || 0;
-                const draftD = projDraft[proj.code] || 0;
-                const mExt = projMonthExt[proj.code] || 0;
-                const mInt = projMonthInt[proj.code] || 0;
-
-                const effectiveUsed = state.includeDraft ? (appD + draftD) : appD;
-                const remaining = proj.budget - effectiveUsed;
-
-                sumBudget += proj.budget;
-                sumApproved += appD;
-                sumDraft += draftD;
-                sumRemaining += remaining;
-                sumMExt += mExt;
-                sumMInt += mInt;
-
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition";
-                tr.innerHTML = `
-                    <td class="py-2.5 px-3 font-semibold text-slate-800">${proj.code}</td>
-                    <td class="py-2.5 px-3 text-right font-medium">${proj.budget} 天</td>
-                    <td class="py-2.5 px-3 text-right text-emerald-600 font-medium">${appD} 天</td>
-                    <td class="py-2.5 px-3 text-right text-amber-600 font-medium">${draftD > 0 ? '+' + draftD : 0} 天</td>
-                    <td class="py-2.5 px-3 text-right font-bold ${remaining < 0 ? 'text-rose-600' : 'text-slate-900'}">${remaining.toFixed(1)} 天</td>
-                    <td class="py-2.5 px-3 text-right text-blue-600 font-medium">${mExt > 0 ? mExt.toFixed(1) : '-'}</td>
-                    <td class="py-2.5 px-3 text-right text-indigo-600 font-medium">${mInt > 0 ? mInt.toFixed(1) : '-'}</td>
-                    <td class="py-2.5 px-3 text-center flex items-center justify-center gap-1">
-                        ${remaining < 0 
-                            ? `<span class="bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full text-[10px] font-bold">預算超支</span>` 
-                            : `<span class="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-[10px]">良好</span>`}
-                        <button onclick="editProject(${idx})" class="p-1 text-slate-400 hover:text-slate-700" title="編輯專案"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
-                        <button onclick="deleteProject(${idx})" class="p-1 text-rose-400 hover:text-rose-700" title="刪除專案"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            tfoot.innerHTML = `
-                <tr>
-                    <td class="py-2.5 px-3">總計 (Total)</td>
-                    <td class="py-2.5 px-3 text-right">${sumBudget.toFixed(1)} 天</td>
-                    <td class="py-2.5 px-3 text-right text-emerald-600">${sumApproved.toFixed(1)} 天</td>
-                    <td class="py-2.5 px-3 text-right text-amber-600">${sumDraft > 0 ? '+' + sumDraft.toFixed(1) : 0} 天</td>
-                    <td class="py-2.5 px-3 text-right ${sumRemaining < 0 ? 'text-rose-600' : 'text-slate-900'}">${sumRemaining.toFixed(1)} 天</td>
-                    <td class="py-2.5 px-3 text-right text-blue-600">${sumMExt.toFixed(1)} 天</td>
-                    <td class="py-2.5 px-3 text-right text-indigo-600">${sumMInt.toFixed(1)} 天</td>
-                    <td class="py-2.5 px-3 text-center">-</td>
-                </tr>
-            `;
-        }
-
-        function renderQuickStats() {
-            const monthStr = String(state.currentMonth).padStart(2, '0');
-            const daysInMonth = new Date(state.year, state.currentMonth, 0).getDate();
-
-            let holidaysCount = 0;
-            let leaveDaysCount = 0;
-            let extDaysCount = 0;
-            let intDaysCount = 0;
-
-            for (let d = 1; d <= daysInMonth; d++) {
-                const dateStr = `${state.year}-${monthStr}-${String(d).padStart(2, '0')}`;
-                const dateObj = new Date(state.year, state.currentMonth - 1, d);
-                const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
-                const entry = getDayEntry(dateStr) || {};
-
-                if (HOLIDAYS_2027[dateStr] || entry.type === 'holiday' || (isWeekend && entry.type !== 'workday')) {
-                    holidaysCount++;
-                }
-
-                if (entry.leave && entry.leave.hours && isItemActive(entry.leave.status)) {
-                    leaveDaysCount += convertLeaveHoursToManDays(entry.leave.hours);
-                }
-                if (entry.ext && entry.ext.days && isItemActive(entry.ext.status)) {
-                    extDaysCount += parseFloat(entry.ext.days) || 0;
-                }
-                if (entry.int && entry.int.days && isItemActive(entry.int.status)) {
-                    intDaysCount += parseFloat(entry.int.days) || 0;
-                }
-            }
-
-            document.getElementById('statHolidays').textContent = holidaysCount;
-            document.getElementById('statLeaves').textContent = leaveDaysCount.toFixed(1);
-            document.getElementById('statExternal').textContent = extDaysCount.toFixed(1);
-            document.getElementById('statInternal').textContent = intDaysCount.toFixed(1);
-        }
-
-        // --- MODAL & FORM HANDLERS ---
         function openDayModal(dateStr) {
-            activeEditDate = dateStr;
-            const entry = getDayEntry(dateStr) || {};
+            selectedDateStr = dateStr;
+            document.getElementById('modalDateTitle').innerText = `設定日期: ${dateStr}`;
 
-            document.getElementById('modalDateTitle').textContent = `${dateStr} 編輯排程`;
+            let leaveSelect = document.getElementById('modalLeaveType');
+            leaveSelect.innerHTML = '';
+            leaves.forEach(l => {
+                let opt = document.createElement('option');
+                opt.value = l.name;
+                opt.innerText = `${l.name} (額度 ${l.total}h)`;
+                leaveSelect.appendChild(opt);
+            });
 
-            const leaveSelect = document.getElementById('modalLeaveType');
-            leaveSelect.innerHTML = `<option value="">-- 無請假 --</option>` +
-                state.leaveTypes.map(t => `<option value="${t.id}">${t.name} (額度 ${t.totalHours}h)</option>`).join('');
+            let extProjSelect = document.getElementById('modalExtProject');
+            let intProjSelect = document.getElementById('modalIntProject');
+            extProjSelect.innerHTML = '<option value="">-- 無專案 --</option>';
+            intProjSelect.innerHTML = '<option value="">-- 無專案 --</option>';
+            projects.forEach(p => {
+                let opt1 = document.createElement('option');
+                opt1.value = p.name;
+                opt1.innerText = p.name;
+                extProjSelect.appendChild(opt1);
 
-            const projOptions = `<option value="">-- 無專案 --</option>` +
-                state.projects.map(p => `<option value="${p.code}">${p.code}</option>`).join('');
-            
-            document.getElementById('modalExtProject').innerHTML = projOptions;
-            document.getElementById('modalIntProject').innerHTML = projOptions;
+                let opt2 = document.createElement('option');
+                opt2.value = p.name;
+                opt2.innerText = p.name;
+                intProjSelect.appendChild(opt2);
+            });
 
-            const dateObj = new Date(dateStr);
-            const isWeekend = dateObj.getDay() === 0 || dateObj.getDay() === 6;
-            document.getElementById('modalDayType').value = entry.type || (isWeekend ? 'weekend' : 'workday');
-            document.getElementById('modalHolidayNote').value = entry.holidayNote || (HOLIDAYS_2027[dateStr] || '');
+            let rec = records[dateStr] || {};
+            if (rec.leave) {
+                leaveSelect.value = rec.leave.type || leaves[0].name;
+                document.getElementById('modalLeaveHours').value = rec.leave.hours || "";
+                document.getElementById('modalLeaveStatus').value = rec.leave.status || "draft";
+            } else {
+                leaveSelect.value = leaves[0].name;
+                document.getElementById('modalLeaveHours').value = "";
+                document.getElementById('modalLeaveStatus').value = "draft";
+            }
 
-            document.getElementById('modalLeaveType').value = entry.leave?.typeId || '';
-            document.getElementById('modalLeaveHours').value = entry.leave?.hours || '';
-            document.getElementById('modalLeaveStatus').value = entry.leave?.status || 'draft';
+            if (rec.ext) {
+                extProjSelect.value = rec.ext.project || "";
+                document.getElementById('modalExtDays').value = rec.ext.days || "0";
+                document.getElementById('modalExtStatus').value = rec.ext.status || "draft";
+            } else {
+                extProjSelect.value = "";
+                document.getElementById('modalExtDays').value = "0";
+                document.getElementById('modalExtStatus').value = "draft";
+            }
 
-            document.getElementById('modalExtProject').value = entry.ext?.projCode || '';
-            document.getElementById('modalExtDays').value = entry.ext?.days || '';
-            document.getElementById('modalExtStatus').value = entry.ext?.status || 'draft';
+            if (rec.int) {
+                intProjSelect.value = rec.int.project || "";
+                document.getElementById('modalIntDays').value = rec.int.days || "0";
+                document.getElementById('modalIntStatus').value = rec.int.status || "draft";
+            } else {
+                intProjSelect.value = "";
+                document.getElementById('modalIntDays').value = "0";
+                document.getElementById('modalIntStatus').value = "draft";
+            }
 
-            document.getElementById('modalIntProject').value = entry.int?.projCode || '';
-            document.getElementById('modalIntDays').value = entry.int?.days || '';
-            document.getElementById('modalIntStatus').value = entry.int?.status || 'draft';
-
-            setupModalValidationListeners();
+            updateModalCalculation();
             document.getElementById('dayModal').classList.remove('hidden');
         }
 
-        function setupModalValidationListeners() {
-            const inputs = ['modalLeaveHours', 'modalLeaveType', 'modalExtDays', 'modalIntDays'];
-            inputs.forEach(id => {
-                const el = document.getElementById(id);
-                if (el) el.oninput = checkModalValidation;
-                if (el && el.tagName === 'SELECT') el.onchange = checkModalValidation;
-            });
-            checkModalValidation();
+        function closeDayModal() {
+            document.getElementById('dayModal').classList.add('hidden');
         }
 
-        function checkModalValidation() {
-            const leaveType = document.getElementById('modalLeaveType').value;
-            const leaveHrs = parseFloat(document.getElementById('modalLeaveHours').value) || 0;
-            const extDays = parseFloat(document.getElementById('modalExtDays').value) || 0;
-            const intDays = parseFloat(document.getElementById('modalIntDays').value) || 0;
+        function updateModalCalculation() {
+            let hours = Number(document.getElementById('modalLeaveHours').value) || 0;
+            let leaveDays = convertLeaveHoursToDays(hours);
+            let extDays = Number(document.getElementById('modalExtDays').value) || 0;
+            let intDays = Number(document.getElementById('modalIntDays').value) || 0;
 
-            const leaveDays = leaveType ? convertLeaveHoursToManDays(leaveHrs) : 0;
-            const total = leaveDays + extDays + intDays;
-            const dayType = document.getElementById('modalDayType').value;
+            document.getElementById('leaveCalcBadge').innerText = `請假 ${hours}h ➔ 折算 ${leaveDays} 人天`;
 
-            // 更新請假試算標籤
-            const leaveHint = document.getElementById('leaveCalcHint');
-            if (leaveHint) {
-                if (!leaveType || leaveHrs <= 0) {
-                    leaveHint.textContent = "請假折算：0 人天";
-                } else {
-                    leaveHint.textContent = `請假 ${leaveHrs}h ➔ 折算 ${leaveDays} 人天`;
-                }
-            }
+            let total = leaveDays + extDays + intDays;
+            let alertBox = document.getElementById('modalAlertBox');
+            let saveBtn = document.getElementById('modalSaveBtn');
 
-            const banner = document.getElementById('modalValidationBanner');
-            const saveBtn = document.getElementById('saveDayModalBtn');
-            banner.classList.remove('hidden', 'bg-rose-50', 'text-rose-800', 'border-rose-200', 'bg-emerald-50', 'text-emerald-800', 'border-emerald-200', 'bg-amber-50', 'text-amber-800', 'border-amber-200');
-
-            if (total > 1.001) {
-                // 超出 1.0 天強行防呆鎖定
-                banner.classList.add('bg-rose-50', 'text-rose-800', 'border-rose-200');
-                banner.innerHTML = `⚠️ <strong>超額警示（無法儲存）：</strong> 當日總計 <strong>${total.toFixed(1)} 人天</strong>（請假 ${leaveDays}d + 出差 ${extDays}d + 內勤 ${intDays}d），超過單日 1.0 人天上限！`;
-                if (saveBtn) saveBtn.disabled = true;
-            } else if (dayType === 'workday' && total < 0.999) {
-                // 工作日未填滿 1.0 人天（如 0.5 人天）提示少填
-                const missing = (1.0 - total).toFixed(1);
-                banner.classList.add('bg-amber-50', 'text-amber-800', 'border-amber-200');
-                banner.innerHTML = `💡 <strong>未填滿提示：</strong> 當日總計 <strong>${total.toFixed(1)} 人天</strong>（請假 ${leaveDays}d + 出差 ${extDays}d + 內勤 ${intDays}d），<span class="font-bold text-amber-900">尚少填 ${missing} 人天</span>。（可正常儲存預排）`;
-                if (saveBtn) saveBtn.disabled = false;
-            } else if (total >= 0.999 && total <= 1.001) {
-                // 剛好 1.0 人天
-                banner.classList.add('bg-emerald-50', 'text-emerald-800', 'border-emerald-200');
-                banner.innerHTML = `✅ <strong>完美填滿：</strong> 當日總計 <strong>1.0 人天</strong>（請假 ${leaveDays}d + 出差 ${extDays}d + 內勤 ${intDays}d），已完全填滿一日標準。`;
-                if (saveBtn) saveBtn.disabled = false;
+            if (total > 1.0) {
+                alertBox.className = "p-3 rounded-xl border text-xs font-medium bg-red-950/40 border-red-500/40 text-red-300";
+                alertBox.innerHTML = `❌ 超額警告：當日總計 <b>${total} 人天</b>（請假 ${leaveDays}d + 出差 ${extDays}d + 內勤 ${intDays}d），超過 1.0 人天上限！無法儲存。`;
+                saveBtn.disabled = true;
+                saveBtn.className = "px-4 py-2 bg-gray-700 text-gray-400 text-sm font-semibold rounded-xl cursor-not-allowed";
+            } else if (total < 1.0 && total > 0) {
+                let missing = (1.0 - total).toFixed(1);
+                alertBox.className = "p-3 rounded-xl border text-xs font-medium bg-amber-950/40 border-amber-500/40 text-amber-300";
+                alertBox.innerHTML = `💡 未填滿提示：當日總計 <b>${total} 人天</b>（請假 ${leaveDays}d + 出差 ${extDays}d + 內勤 ${intDays}d），尚少填 ${missing} 人天。（可正常儲存預排）`;
+                saveBtn.disabled = false;
+                saveBtn.className = "px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl shadow-md transition";
+            } else if (total === 1.0) {
+                alertBox.className = "p-3 rounded-xl border text-xs font-medium bg-emerald-950/40 border-emerald-500/40 text-emerald-300";
+                alertBox.innerHTML = `✅ 合規：當日總計 <b>1.0 人天</b>（請假 ${leaveDays}d + 出差 ${extDays}d + 內勤 ${intDays}d），剛好符合標準。`;
+                saveBtn.disabled = false;
+                saveBtn.className = "px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl shadow-md transition";
             } else {
-                banner.classList.add('hidden');
-                if (saveBtn) saveBtn.disabled = false;
+                alertBox.className = "p-3 rounded-xl border text-xs font-medium bg-gray-800/40 border-gray-700 text-gray-400";
+                alertBox.innerHTML = `ℹ️ 當日尚未填寫任何項目（共 0 人天）。`;
+                saveBtn.disabled = false;
+                saveBtn.className = "px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold rounded-xl shadow-md transition";
             }
         }
 
-        function saveDayModal() {
-            if (!activeEditDate) return;
+        // 🛑 包含「總人天超額」與「假別時數不足」的強行阻擋防呆
+        function saveDayData() {
+            let lType = document.getElementById('modalLeaveType').value;
+            let lHours = Number(document.getElementById('modalLeaveHours').value) || 0;
+            let lStatus = document.getElementById('modalLeaveStatus').value;
 
-            const leaveType = document.getElementById('modalLeaveType').value;
-            const leaveHrs = parseFloat(document.getElementById('modalLeaveHours').value) || 0;
-            const leaveStatus = document.getElementById('modalLeaveStatus').value;
+            let eProj = document.getElementById('modalExtProject').value;
+            let eDays = Number(document.getElementById('modalExtDays').value) || 0;
+            let eStatus = document.getElementById('modalExtStatus').value;
 
-            const extProj = document.getElementById('modalExtProject').value;
-            const extDays = parseFloat(document.getElementById('modalExtDays').value) || 0;
-            const extStatus = document.getElementById('modalExtStatus').value;
+            let iProj = document.getElementById('modalIntProject').value;
+            let iDays = Number(document.getElementById('modalIntDays').value) || 0;
+            let iStatus = document.getElementById('modalIntStatus').value;
 
-            const intProj = document.getElementById('modalIntProject').value;
-            const intDays = parseFloat(document.getElementById('modalIntDays').value) || 0;
-            const intStatus = document.getElementById('modalIntStatus').value;
+            let lDays = convertLeaveHoursToDays(lHours);
+            let totalDays = lDays + eDays + iDays;
 
-            const dayType = document.getElementById('modalDayType').value;
-            const holidayNote = document.getElementById('modalHolidayNote').value.trim();
-
-            const entry = {
-                type: dayType,
-                holidayNote: holidayNote,
-                leave: (leaveType && leaveHrs > 0) ? { typeId: leaveType, hours: leaveHrs, status: leaveStatus } : null,
-                ext: (extProj && extDays > 0) ? { projCode: extProj, days: extDays, status: extStatus } : null,
-                int: (intProj && intDays > 0) ? { projCode: intProj, days: intDays, status: intStatus } : null
-            };
-
-            if (!entry.leave && !entry.ext && !entry.int && !holidayNote && dayType === 'workday') {
-                delete state.daysData[activeEditDate];
-            } else {
-                state.daysData[activeEditDate] = entry;
-            }
-
-            closeModal('dayModal');
-            renderAll();
-        }
-
-        function clearDayEntry() {
-            if (activeEditDate && state.daysData[activeEditDate]) {
-                delete state.daysData[activeEditDate];
-                closeModal('dayModal');
-                renderAll();
-            }
-        }
-
-        // --- LEAVE & PROJECT CRUD ---
-        function openLeaveModal() {
-            const list = document.getElementById('leaveEditList');
-            list.innerHTML = '';
-            state.leaveTypes.forEach(lt => {
-                const item = document.createElement('div');
-                item.className = "flex items-center gap-2 bg-slate-50 p-2 rounded-lg border border-slate-200";
-                item.innerHTML = `
-                    <span class="text-xs font-semibold text-slate-800 flex-1">${lt.name}</span>
-                    <input type="number" value="${lt.totalHours}" onchange="updateLeaveQuota('${lt.id}', this.value)" class="w-20 text-xs border border-slate-300 rounded p-1 text-right">
-                    <span class="text-xs text-slate-500">小時</span>
-                    <button onclick="removeLeaveType('${lt.id}')" class="text-rose-500 hover:text-rose-700 p-1"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-                `;
-                list.appendChild(item);
-            });
-            lucide.createIcons();
-            document.getElementById('leaveModal').classList.remove('hidden');
-        }
-
-        function updateLeaveQuota(id, val) {
-            const lt = state.leaveTypes.find(t => t.id === id);
-            if (lt) {
-                lt.totalHours = parseFloat(val) || 0;
-                saveToLocalStorage();
-            }
-        }
-
-        function removeLeaveType(id) {
-            state.leaveTypes = state.leaveTypes.filter(t => t.id !== id);
-            openLeaveModal();
-        }
-
-        function addNewLeaveType() {
-            const name = document.getElementById('newLeaveName').value.trim();
-            const quota = parseFloat(document.getElementById('newLeaveQuota').value) || 0;
-
-            if (name) {
-                state.leaveTypes.push({
-                    id: 'l_' + Date.now(),
-                    name: name,
-                    totalHours: quota
-                });
-                document.getElementById('newLeaveName').value = '';
-                document.getElementById('newLeaveQuota').value = '';
-                openLeaveModal();
-            }
-        }
-
-        function resetLeaveTypesToDefault() {
-            if (confirm('確定要將假別項目與額度恢復為預設設定嗎？')) {
-                state.leaveTypes = JSON.parse(JSON.stringify(DEFAULT_LEAVE_TYPES));
-                openLeaveModal();
-                renderAll();
-            }
-        }
-
-        // Project Modal & CRUD
-        function openProjectModal() {
-            document.getElementById('editProjIndex').value = "-1";
-            document.getElementById('projectModalTitle').innerHTML = `<i data-lucide="folder-plus" class="w-5 h-5"></i> 新增 2027 年新計畫`;
-            document.getElementById('newProjCode').value = '';
-            document.getElementById('newProjBudget').value = '';
-            document.getElementById('projectModal').classList.remove('hidden');
-            lucide.createIcons();
-        }
-
-        function editProject(index) {
-            const proj = state.projects[index];
-            if (!proj) return;
-            document.getElementById('editProjIndex').value = index;
-            document.getElementById('projectModalTitle').innerHTML = `<i data-lucide="edit-3" class="w-5 h-5"></i> 編輯專案資料`;
-            document.getElementById('newProjCode').value = proj.code;
-            document.getElementById('newProjBudget').value = proj.budget;
-            document.getElementById('projectModal').classList.remove('hidden');
-            lucide.createIcons();
-        }
-
-        function deleteProject(index) {
-            const proj = state.projects[index];
-            if (proj && confirm(`確定要刪除專案「${proj.code}」嗎？`)) {
-                state.projects.splice(index, 1);
-                renderAll();
-            }
-        }
-
-        function saveProjectModal() {
-            const idx = parseInt(document.getElementById('editProjIndex').value);
-            const code = document.getElementById('newProjCode').value.trim();
-            const budget = parseFloat(document.getElementById('newProjBudget').value) || 0;
-
-            if (!code) {
-                alert('請輸入專案編號或計畫名稱！');
+            // 1. 每日總人天防呆阻擋 (> 1.0)
+            if (totalDays > 1.0) {
+                alert(`❌ 無法儲存：當日總人天為 ${totalDays} 人天，已超過每日 1.0 人天的上限！`);
                 return;
             }
 
-            if (idx === -1) {
-                // Add
-                if (state.projects.some(p => p.code === code)) {
-                    alert('已存在相同名稱或代碼的專案！');
-                    return;
+            // 2. 假別年度時數額度不足防呆阻擋
+            if (lHours > 0) {
+                let targetLeave = leaves.find(l => l.name === lType);
+                if (targetLeave) {
+                    let usedHours = 0;
+                    for (let date in records) {
+                        if (date === selectedDateStr) continue; // 略過當天原本舊紀錄
+                        let rec = records[date];
+                        if (rec.leave && rec.leave.type === lType && rec.leave.hours) {
+                            usedHours += Number(rec.leave.hours);
+                        }
+                    }
+                    let remainingHours = targetLeave.total - usedHours;
+                    if (lHours > remainingHours) {
+                        alert(`❌ 假別額度不足：${lType} 年度總額 ${targetLeave.total}h，已使用 ${usedHours}h，剩餘 ${remainingHours}h，無法登記 ${lHours}h！`);
+                        return;
+                    }
                 }
-                state.projects.push({ code, budget });
-            } else {
-                // Edit
-                state.projects[idx].code = code;
-                state.projects[idx].budget = budget;
             }
 
-            closeModal('projectModal');
+            records[selectedDateStr] = {
+                leave: { type: lType, hours: lHours, status: lStatus },
+                ext: { project: eProj, days: eDays, status: eStatus },
+                int: { project: iProj, days: iDays, status: iStatus }
+            };
+
+            closeDayModal();
             renderAll();
         }
 
-        // --- TOGGLES & HELPERS ---
-        function toggleDraftInclude() {
-            state.includeDraft = true;
-            renderAll();
+        function clearDayData() {
+            if (confirm(`確定要清除 ${selectedDateStr} 的所有填寫資料嗎？`)) {
+                delete records[selectedDateStr];
+                closeDayModal();
+                renderAll();
+            }
         }
 
-        function toggleApprovedOnly() {
-            state.includeDraft = false;
-            renderAll();
+        function exportJSON() {
+            let data = { leaves, projects, records };
+            let blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            let url = URL.createObjectURL(blob);
+            let a = document.createElement('a');
+            a.href = url;
+            a.download = '2027_work_system_backup.json';
+            a.click();
+            URL.revokeObjectURL(url);
         }
 
-        function changeMonth(delta) {
-            state.currentMonth += delta;
-            if (state.currentMonth < 1) state.currentMonth = 12;
-            if (state.currentMonth > 12) state.currentMonth = 1;
-            renderMonthTabs();
-            renderAll();
-        }
-
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
-        }
-
-        // --- BACKUP & RESTORE ---
-        function exportData() {
-            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state, null, 2));
-            const downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", `2027_ManDays_Backup_${new Date().toISOString().slice(0,10)}.json`);
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        }
-
-        function importData(event) {
-            const fileReader = new FileReader();
-            fileReader.onload = function(e) {
+        function importJSON(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
                 try {
-                    const importedState = JSON.parse(e.target.result);
-                    if (importedState && importedState.daysData !== undefined) {
-                        state = importedState;
-                        renderMonthTabs();
-                        renderAll();
-                        alert('資料匯入成功！');
-                    } else {
-                        alert('檔案格式不相符！');
-                    }
+                    let data = JSON.parse(e.target.result);
+                    if (data.leaves) leaves = data.leaves;
+                    if (data.projects) projects = data.projects;
+                    if (data.records) records = data.records;
+                    renderAll();
+                    alert('資料匯入成功！');
                 } catch (err) {
-                    alert('無法解析 JSON 檔案！');
+                    alert('JSON 檔案格式錯誤，無法匯入！');
                 }
             };
-            fileReader.readAsText(event.target.files[0]);
+            reader.readAsText(file);
         }
 
-        function resetData() {
-            if (confirm('確定要恢復為初始預設資料嗎？預設專案將維持空白，請假額度恢復初始。')) {
-                state.leaveTypes = JSON.parse(JSON.stringify(DEFAULT_LEAVE_TYPES));
-                state.projects = [];
-                state.daysData = {};
-                renderMonthTabs();
-                renderAll();
+        function resetSystemData() {
+            if (confirm('警告：這將會清除所有已填寫的日曆預排、專案與假別資料，恢復為初始狀態。確定要重置嗎？')) {
+                localStorage.clear();
+                location.reload();
             }
         }
     </script>
