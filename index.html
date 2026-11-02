@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>2027 聰明人天與假別預排統計系統</title>
+    <title>2027 小聰明人天與假別預排統計系統</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     <!-- FontAwesome -->
@@ -23,7 +23,7 @@
                 </div>
                 <div>
                     <h1 class="text-2xl font-bold tracking-tight text-slate-900">2027 聰明人天與假別預排統計系統</h1>
-                    <p class="text-sm text-slate-500 mt-0.5">整合假別額度管理、雙軌審核（草稿/核准）、天災停班課調整與專案人天防呆預排</p>
+                    <p class="text-sm text-slate-500 mt-0.5">依據行政院 2027 正式辦公日曆表（244天工作天）建置</p>
                 </div>
             </div>
             <div class="flex flex-wrap items-center gap-3">
@@ -44,8 +44,8 @@
         <section class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
                 <div class="text-sm font-medium text-slate-500">2027 全年工作天</div>
-                <div class="text-3xl font-bold text-slate-900 mt-2" id="statTotalWorkDays">248 天</div>
-                <div class="text-xs text-slate-400 mt-1">已自動扣除例假日與國定/天災假</div>
+                <div class="text-3xl font-bold text-slate-900 mt-2" id="statTotalWorkDays">244 天</div>
+                <div class="text-xs text-slate-400 mt-1">依行政院公佈總計 244 天工作天</div>
             </div>
             <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
                 <div class="text-sm font-medium text-slate-500">計畫已編列總預算</div>
@@ -59,7 +59,7 @@
             </div>
             <div class="bg-white border border-slate-200 p-5 rounded-2xl shadow-sm">
                 <div class="text-sm font-medium text-slate-500">尚缺 / 剩餘人天 (缺口)</div>
-                <div class="text-3xl font-bold text-amber-600 mt-2" id="statGap">248 人天</div>
+                <div class="text-3xl font-bold text-amber-600 mt-2" id="statGap">244 人天</div>
                 <div class="text-xs text-slate-400 mt-1" id="statGapDesc">工作天 - 編列總人天</div>
             </div>
         </section>
@@ -292,20 +292,25 @@
     </div>
 
     <script>
+        // 行政院 116年(2027年) 政府行政機關辦公日曆表正式公告清單 (共 17 天放假)
         const baseHolidays2027 = {
             "2027-01-01": "開國紀念日",
-            "2027-01-28": "農曆春節",
-            "2027-01-29": "農曆春節",
-            "2027-02-01": "農曆春節",
-            "2027-02-02": "農曆春節",
-            "2027-02-03": "農曆春節",
-            "2027-02-28": "和平紀念日",
+            "2027-02-04": "農曆春節",
+            "2027-02-05": "農曆春節",
+            "2027-02-08": "農曆春節",
+            "2027-02-09": "農曆春節初一補假",
+            "2027-02-10": "農曆春節初二補假",
             "2027-03-01": "和平紀念日補假",
-            "2027-04-05": "兒童節與民族掃墓節",
-            "2027-05-31": "端午節",
+            "2027-04-05": "清明節",
+            "2027-04-06": "兒童節補假",
+            "2027-04-30": "勞動節補假",
+            "2027-06-09": "端午節",
             "2027-09-15": "中秋節",
-            "2027-10-10": "國慶日",
-            "2027-10-11": "國慶日補假"
+            "2027-09-28": "教師節",
+            "2027-10-11": "國慶日補假",
+            "2027-10-25": "臺灣光復節",
+            "2027-12-24": "行憲紀念日補假",
+            "2027-12-31": "117年開國紀念日補假"
         };
 
         const defaultLeaves = [
@@ -584,7 +589,6 @@
                 let isDisaster = rec.isDisaster;
 
                 let cell = document.createElement('div');
-                // 格子高度放大至 h-36，確保加大字體後內容充裕
                 cell.className = `bg-white border rounded-xl p-3 h-36 flex flex-col justify-between cursor-pointer transition hover:border-blue-400 hover:shadow-sm relative group`;
 
                 if (isWeekend) {
@@ -599,7 +603,7 @@
                 let contentSummary = '';
 
                 if (isDisaster) {
-                    badgeHtml = `<span class="text-xs bg-amber-100 text-amber-800 border border-amber-300 px-2 py-0.5 rounded-md font-bold">天災停班課</span>`;
+                    badgeHtml = `<span class="text-xs bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-0.5 rounded-full font-bold">天災停班課</span>`;
                 } else if (!isWeekend && !baseHolidayName) {
                     let lDays = rec.leave && rec.leave.hours ? convertLeaveHoursToDays(Number(rec.leave.hours)) : 0;
                     let eDays = rec.ext && rec.ext.days ? Number(rec.ext.days) : 0;
@@ -607,19 +611,19 @@
                     let totalFilled = lDays + eDays + iDays;
 
                     if (totalFilled === 1) {
-                        badgeHtml = `<span class="text-xs bg-emerald-100 text-emerald-800 border border-emerald-300 px-2.5 py-0.5 rounded-md font-bold">已填滿 1.0d</span>`;
+                        badgeHtml = `<span class="text-xs bg-emerald-100 text-emerald-800 border border-emerald-300 px-3 py-0.5 rounded-full font-bold">已填滿 1.0d</span>`;
                     } else if (totalFilled > 1) {
-                        badgeHtml = `<span class="text-xs bg-red-100 text-red-800 border border-red-300 px-2.5 py-0.5 rounded-md font-bold">超額 ${totalFilled}d</span>`;
+                        badgeHtml = `<span class="text-xs bg-red-100 text-red-800 border border-red-300 px-3 py-0.5 rounded-full font-bold">超額 ${totalFilled}d</span>`;
                     } else if (totalFilled > 0 && totalFilled < 1) {
                         let missing = (1 - totalFilled).toFixed(1);
-                        badgeHtml = `<span class="text-xs bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-0.5 rounded-md font-bold">待填 ${missing}d</span>`;
+                        badgeHtml = `<span class="text-xs bg-amber-100 text-amber-800 border border-amber-300 px-3 py-0.5 rounded-full font-bold">待填 ${missing}d</span>`;
                     } else {
-                        badgeHtml = `<span class="text-xs bg-slate-100 text-slate-600 border border-slate-300 px-2.5 py-0.5 rounded-md font-bold">待填 1.0d</span>`;
+                        badgeHtml = `<span class="text-xs bg-slate-100 text-slate-600 border border-slate-300 px-3 py-0.5 rounded-full font-bold">待填 1.0d</span>`;
                     }
                 }
 
                 if (baseHolidayName) {
-                    contentSummary += `<div class="text-sm text-amber-700 font-bold truncate">${baseHolidayName}</div>`;
+                    contentSummary += `<div class="text-sm text-amber-700 font-bold truncate text-center">${baseHolidayName}</div>`;
                 }
                 if (rec.leave && rec.leave.hours) {
                     contentSummary += `<div class="text-sm text-purple-700 font-semibold truncate">假: ${rec.leave.type} ${rec.leave.hours}h</div>`;
@@ -634,9 +638,11 @@
                 cell.innerHTML = `
                     <div class="flex justify-between items-center">
                         <span class="text-base font-black ${isWeekend || baseHolidayName || isDisaster ? 'text-red-600' : 'text-slate-800'}">${day}</span>
+                    </div>
+                    <div class="flex flex-col items-center justify-center my-auto overflow-hidden">
                         ${badgeHtml}
                     </div>
-                    <div class="space-y-1.5 mt-1 overflow-hidden">
+                    <div class="space-y-1 overflow-hidden">
                         ${contentSummary}
                     </div>
                 `;
